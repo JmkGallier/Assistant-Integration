@@ -88,9 +88,9 @@ GPIO.setup(red_LED, GPIO.OUT)
 GPIO.setup(green_LED, GPIO.OUT)
 
 ser = serial.Serial('/dev/ttyACM0', 9600, 8, 'N', 1, timeout=3)
-bash_thirsty = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio_repo/thirsty.raw"
-bash_satis = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio_repo/satisfied_plant.raw"
-bash_watered = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio_repo/watered_plant.raw"
+bash_thirsty = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio(raw)/thirsty.raw"
+bash_satis = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio(raw)/satisfied_plant.raw"
+bash_watered = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio(raw)/watered_plant.raw"
 
 fail_counter = 0
 d_level_arr = []
