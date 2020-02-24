@@ -1,5 +1,5 @@
 # Designing Voice Assistants
-## Purpose
+#### Purpose
 This repository contains logic for devices being developed for
 the University of Maryland's Human Computer Interaction Lab.
 Current project topics include devices meant for use by people
