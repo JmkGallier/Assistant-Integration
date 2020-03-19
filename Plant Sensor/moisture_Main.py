@@ -5,6 +5,7 @@ import time
 import os
 import RPi.GPIO as GPIO
 
+
 def mainListener(ard_str):
     # Add LED functions
     # Call Distance function
@@ -12,7 +13,8 @@ def mainListener(ard_str):
     moist_val = float(ard_tup[0])
     dist_val = float(ard_tup[1])
     return moist_val, dist_val
-    
+
+
 def distDiscerner(ard_str):
     ard_tup = mainListener(ard_str)
     print(d_param)
@@ -21,8 +23,10 @@ def distDiscerner(ard_str):
     else:
         pass
 
+
 def ledNotification():
     pass
+
 
 def waterNotification(m_param):
     if m_param <= moist_thres:
@@ -39,6 +43,7 @@ def waterNotification(m_param):
         GPIO.output(red_LED,False)
         os.system(bash_satis)
         time.sleep(30)
+
 
 def userInteraction():
     m_param = 0
@@ -78,6 +83,7 @@ def distarrPrimer(dist_val, dist_array):
         distarrPrimer(dist_val, dist_array)
     return dist_array
 
+
 red_LED = 24
 green_LED = 23
 dist_thres = .15
@@ -92,11 +98,11 @@ bash_thirsty = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio(raw)/
 bash_satis = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio(raw)/satisfied_plant.raw"
 bash_watered = "aplay --format=S16_LE --rate=16000 ${HOME}/Downloads/audio(raw)/watered_plant.raw"
 
-fail_counter = 0
+dev_counter = 0
 d_level_arr = []
 time.sleep(4)
 
-while fail_counter < 50: #Change to Whilte TRUE when ready to deply device after using the Cron tool
+while dev_counter < 50:  # Change to While TRUE when ready to deploy device after using the Cron tool
     try:
         ser_tup = mainListener(ser)
         m_level = ser_tup[0]
@@ -105,21 +111,20 @@ while fail_counter < 50: #Change to Whilte TRUE when ready to deply device after
 #         d_level = sum(d_level_arr)/len(d_level_arr)
         print(d_level)
         if m_level > moist_thres:
-            GPIO.output(red_LED,False)
-            GPIO.output(green_LED,True)
+            GPIO.output(red_LED, False)
+            GPIO.output(green_LED, True)
             continue
         elif m_level < moist_thres and d_level > dist_thres:
-            GPIO.output(green_LED,False)
-            GPIO.output(red_LED,True)
+            GPIO.output(green_LED, False)
+            GPIO.output(red_LED, True)
             waterNotification(m_level)
         elif m_level < moist_thres and d_level < dist_thres:
-            GPIO.output(green_LED,False)
-            GPIO.output(red_LED,False)
+            GPIO.output(green_LED, False)
+            GPIO.output(red_LED, False)
             pass
-                
-        
-        fail_counter += 1
-        print(fail_counter)
+
+        dev_counter += 1
+        print(dev_counter)
     except IndexError:
         continue
 
