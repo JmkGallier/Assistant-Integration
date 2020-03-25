@@ -1,11 +1,10 @@
-#include <TFT.h>
-#include <SPI.h>
-
 int IRpin = 1; //Infrared sensor pin
 int MSpin = 0; //moisture sensor pin
 char receivedChar;  //variable to store info from Rasp Pi
 boolean newData = false;
-//int greenLED = 13; if using Arudino for LED O/P
+
+//If Arduino is used for LED output
+//int greenLED = 13;
 //int redLED = 12; 
 
 void setup() {  
@@ -22,50 +21,43 @@ float GetMoisture() {
   return moist;
 }
 
-// Needs work
 int GetDistance() {
   int i;
   int dist_val = 0;
-  for (i = 0; i < 1; i++){
-    dist_val = dist_val + analogRead(IRpin);    // sensor on analog pin 0
+  int sensor_count = 25;
+  for (i = 0; i < sensor_count; i++){
+    dist_val = dist_val + analogRead(IRpin);
+    delay(50);
   }
-  dist_val = dist_val / 5;
+  dist_val = dist_val / sensor_count;
   return dist_val;
 }
 
 void loop() {
-//  float moisture = GetMoisture();
+  float moisture = GetMoisture();
   int distance = GetDistance();
-//  Serial.print(moisture);
-//  Serial.print(" ");
+  Serial.print(moisture);
+  Serial.print(" ");
   Serial.println(distance);
   delay(1000);
 
-  //recvInfo(); If Raspb Pi is triggering Arduino to turn on lights
-  //lightLED();  
+  //recvInfo(); // If arduino is used for LED output
+  //lightLED(); // If arduino is used for LED output 
 }
 
-
-
-
-//this was for Arduino connecting to LEDs
+// // If arduino is used for LED output
 //void recvInfo() {
 
   //if (Serial.available() > 0) {
-
     //receivedChar = Serial.read();
     //newData = true;
-    
   //}
-  
 //}
 
+// If arduino is used for LED output
 //void lightLED() {
-
   //int led = (receivedChar - '0');
-
   //while(newData == true) {
-    
     //digitalWrite(led, HIGH);
     //delay(1000);
     //digitalWrite(led, LOW);
@@ -74,9 +66,6 @@ void loop() {
     //delay(1000);
     //digitalWrite(led, LOW);
     //delay(1000);
-
     //newData = false;
   //}
-  
-  
 //}
