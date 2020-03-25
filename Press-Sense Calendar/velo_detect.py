@@ -7,7 +7,7 @@ import os
 ser = serial.Serial('/dev/ttyACM0', 9600, 8, 'N', 1, timeout=3)
 pressed = False
 
-bashcommand = "googlesamples-assistant-pushtotalk --project-id pi-pillbox-ca671 --device-model-id rasp-pillbox-46290 -i date_query.raw"
+bashcommand = "googlesamples-assistant-pushtotalk --project-id pi-pillbox-ca671 --device-model-id rasp-pillbox-46290 -i static_audio/date_query.raw"
 
 
 while not pressed:

@@ -9,7 +9,8 @@ boolean newData = false;
 
 void setup() {  
   Serial.begin(9600); // open serial port, set the baud rate as 9600 bps
-  //pinMode(greenLED, OUTPUT); If choosing Ardunio for OP
+  // If arduino is used for LED output
+  //pinMode(greenLED, OUTPUT);
   //pinMode(redLED, OUTPUT);
 }
 
@@ -42,7 +43,7 @@ void loop() {
   delay(1000);
 
   //recvInfo(); // If arduino is used for LED output
-  //lightLED(); // If arduino is used for LED output 
+  //lightLED(); // If arduino is used for LED output
 }
 
 // // If arduino is used for LED output
