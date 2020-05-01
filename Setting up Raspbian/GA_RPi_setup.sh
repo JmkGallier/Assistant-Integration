@@ -54,7 +54,6 @@ config_Speaker() {
     type plug
     slave {
       pcm 'hw:${SPEAKER_address}'
-      rate 16000
     }
   }" >> ~/.asoundrc
   amixer set Master 70%
