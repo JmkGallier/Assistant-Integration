@@ -5,107 +5,89 @@ import os
 import RPi.GPIO as GPIO
 
 
-def mainListener(ard_str):
-    ard_tup = ard_str.readline().decode("utf-8").replace("\r\n", "").split(" ")
-    moist_val = float(ard_tup[0])
-    dist_val = float(ard_tup[1])
-    return moist_val, dist_val
+def ardOutput_tuple():
+    ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "").split(" ")
+    soil_level = float(ard_tuple[0])
+    dist_level = float(ard_tuple[1])
+    return soil_level, dist_level
 
 
-def distDiscerner(ard_str):
-    ard_tup = mainListener(ard_str)
-    print(d_param)
-    if d_param > distance_threshold:
-        waterNotification(m_param)
-    else:
-        pass
+def soilCheck(rasp_input):
+    soil_level = rasp_input[0]
+    soilCheck_out = 0
+    if soil_level > soil_threshold:
+        print("Soil Greater than Threshold")
+        soilCheck_out = 0
+    elif soil_level <= soil_threshold:
+        print("Soil Less than Threshold")
+        soilCheck_out = 1
+    return soilCheck_out
 
 
-def ledNotification():
+def distCheck(rasp_input):
+    dist_level = rasp_input[1]
+    distCheck_out = 0
+    if dist_level > dist_threshold:
+        print("User is Not in Proximity")
+        distCheck_out = 0
+    elif dist_level <= dist_threshold:
+        print("User in Proximity")
+        distCheck_out = 1
+    return distCheck_out
+
+
+def userCheck():
     pass
 
 
-def waterNotification(m_param):
-    if m_param <= soil_threshold:
-        print(m_param)
-        os.system(bash_thirsty)
-        userInteraction()
-    
-    elif m_param > soil_threshold:
-        print(m_param)
-        GPIO.output(green_LED,False)
-        GPIO.output(red_LED,True)
-        time.sleep(4)
-        GPIO.output(red_LED,False)
-        os.system(bash_satis)
-        time.sleep(30)
+def main():
+    pass
 
 
-def userInteraction():
-    m_param = 0
-    time_counter = 0
-    
-    while time_counter < 15 and m_param < soil_threshold: #counts and checks moisture level for 15 times
-        time_counter += 1
-        ser = serial.Serial('/dev/ttyACM0', 9600, 8, 'N', 1, timeout=3)
-        ard_tup = mainListener(ser)
-        m_param = ard_tup[0]
-        d_param = ard_tup[1]
-        
-        if m_param > soil_threshold:
-            print(m_param)
-            GPIO.output(green_LED, False)
-            GPIO.output(red_LED, False)
-            os.system(bash_watered)
-            GPIO.output(green_LED, True)
-            GPIO.output(red_LED, False)
-            time.sleep(5)
-            GPIO.output(green_LED, False)
-            GPIO.output(red_LED, False)
+def driver():
+    dev_counter = 0
+    while dev_counter < 50:
+        try:
+            ard_out = ardOutput_tuple()
+            soil_status = soilCheck(ard_out)
             
-            break
-        else:
+            if soil_status == 0:
+                continue
+            elif soil_status == 1:
+                dist_status = distCheck(ard_out)
+                if dist_status == 0:
+                    continue
+                elif dist_status == 1:
+                    
+                    
+            
+            print("Iteration: %d | Soil: %g | Distance: %g" % (dev_counter+1, ard_out[0], ard_out[1]))
+            dev_counter += 1
+        except IndexError:
             continue
 
 
-red_LED = 24
-green_LED = 23
-distance_threshold = .15
-soil_threshold = .40
+# GPIO Config
+GPIO_LED_red = 24
+GPIO_LED_green = 23
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(red_LED, GPIO.OUT)
-GPIO.setup(green_LED, GPIO.OUT)
+GPIO.setup(GPIO_LED_red, GPIO.OUT)
+GPIO.setup(GPIO_LED_green, GPIO.OUT)
 
+# 
 ser = serial.Serial('/dev/ttyACM0', 9600, 8, 'N', 1, timeout=3)
 audio_prefix = "aplay --format=S16_LE --rate=16000 " + os.getcwd()
 bash_thirsty = audio_prefix + "/static_audio/thirsty.raw"
 bash_satis = audio_prefix + "/static_audio/satisfied_plant.raw"
 bash_watered = audio_prefix + "/static_audio/watered_plant.raw"
 
-dev_counter = 0
+# Sensor Thresholds
+distance_threshold = .15
+soil_threshold = .40
+
 time.sleep(4)
 
-while dev_counter < 50:
-    try:
-        ser_tup = mainListener(ser)
-        m_level = ser_tup[0]
-        d_level = ser_tup[1]
-        print(d_level)
-        if m_level > soil_threshold:
-            GPIO.output(red_LED, False)
-            GPIO.output(green_LED, True)
-            continue
-        elif m_level < soil_threshold and d_level > distance_threshold:
-            GPIO.output(green_LED, False)
-            GPIO.output(red_LED, True)
-            waterNotification(m_level)
-        elif m_level < soil_threshold and d_level < distance_threshold:
-            GPIO.output(green_LED, False)
-            GPIO.output(red_LED, False)
-            pass
 
-        dev_counter += 1
-        print(dev_counter)
-    except IndexError:
-        continue
+driver()
+
