@@ -24,13 +24,19 @@ float GetMoisture() {
 
 int GetDistance() {
   int dist_val = 0;
+  float IR_Reading = 0;
   int sensor_count = 25;
-  int i;
-  for (i = 0; i < sensor_count; i++){
-    dist_val = dist_val + analogRead(IRpin);
+  for (int i = 0; i < sensor_count; i++){
+    IR_Reading = IR_Reading + analogRead(IRpin);
     delay(50);
   }
-  dist_val = dist_val / sensor_count;
+  IR_Reading = IR_Reading / sensor_count;
+  IR_Reading = IR_Reading - 36;
+  if (IR_Reading < 160) {
+    dist_val = 0;
+  } else {
+    dist_val = 1;
+  }
   return dist_val;
 }
 
