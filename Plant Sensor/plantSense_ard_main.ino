@@ -23,30 +23,32 @@ float GetMoisture() {
 }
 
 int GetDistance() {
-  int dist_val = 0;
-  float IR_Reading = 0;
+  float IR_read = 0;
+  float IR_read_offset = -36;
   int sensor_count = 25;
   for (int i = 0; i < sensor_count; i++){
-    IR_Reading = IR_Reading + analogRead(IRpin);
+    IR_read = IR_read + analogRead(IRpin);
     delay(50);
   }
-  IR_Reading = IR_Reading / sensor_count;
-  IR_Reading = IR_Reading - 36;
-  if (IR_Reading < 160) {
-    dist_val = 0;
+  IR_read = (IR_read / sensor_count) + IR_read_offset;
+  if (IR_read < 160) {
+    return 0;
   } else {
-    dist_val = 1;
+    return 1;
   }
-  return dist_val;
+}
+
+void RPi_Serial(float a, int b) {
+    Serial.print(a);
+    Serial.print(" ");
+    Serial.println(b);
 }
 
 void loop() {
   float moisture = GetMoisture();
   int distance = GetDistance();
-  Serial.print(moisture);
-  Serial.print(" ");
-  Serial.println(distance);
-  delay(1000);
+  RPi_Serial(moisture, distance);
+  delay(500);
 
   //recvInfo(); // If arduino is used for LED output
   //lightLED(); // If arduino is used for LED output
