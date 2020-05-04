@@ -23,6 +23,8 @@ while [ -n "${1-}" ]; do
   shift
 done
 
+
+# Script needs restriction for SUDO users
 install_GA_DEP() {
   sudo apt -qq update
   sudo apt -qq install portaudio19-dev libffi-dev libssl-dev python3-dev python3-venv python-serial python3-serial -y

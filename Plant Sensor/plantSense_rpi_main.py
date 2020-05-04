@@ -58,6 +58,7 @@ def driver():
                 if dist_status == 0:
                     continue
                 elif dist_status == 1:
+                    pass
                     
                     
             
@@ -83,7 +84,7 @@ bash_satis = audio_prefix + "/static_audio/satisfied_plant.raw"
 bash_watered = audio_prefix + "/static_audio/watered_plant.raw"
 
 # Sensor Thresholds
-distance_threshold = .15
+dist_threshold = .15
 soil_threshold = .40
 
 time.sleep(4)
