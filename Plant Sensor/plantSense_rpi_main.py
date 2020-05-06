@@ -6,10 +6,14 @@ import os
 
 
 def ardOutput_tuple():
-    ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "").split(" ")
-    soil_level = float(ard_tuple[0])
-    dist_level = float(ard_tuple[1])
-    return soil_level, dist_level
+    try:
+        ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "").split(" ")
+        soil_level = float(ard_tuple[0])
+        dist_level = float(ard_tuple[1])
+        return soil_level, dist_level
+    except ValueError:
+        time.sleep(5000)
+        return ardOutput_tuple()
 
 
 def soilCheck(rasp_input):
@@ -40,13 +44,11 @@ def userCheck():
             print(check_attempt, timeout, water_check)
             if water_check[0] < soil_threshold:
                 timeout += 1
-                time.sleep(5)
+                ser.write("H".encode("utf-8"))
             else:
                 os.system(bash_satis)
                 timeout = 3
                 check_attempt = 3
-            
-        
 
 
 def main():
@@ -89,15 +91,14 @@ bash_satis = audio_prefix + "/static_audio/satisfied_plant.raw"
 bash_watered = audio_prefix + "/static_audio/watered_plant.raw"
 
 # Sensor Thresholds
-dist_threshold = .15
-soil_threshold = .40
+dist_threshold = 0
+soil_threshold = 40
 
 
 def dev():
-    str_fig = "4"
-    ser.write(str_fig.encode("utf-8"))
+    ser.write("H".encode("utf-8"))
     ser.close
 
 
-dev()
-# driver()
+#dev()
+driver()
