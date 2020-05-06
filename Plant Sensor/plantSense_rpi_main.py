@@ -2,6 +2,7 @@
 import serial
 import time
 import os
+import struct
 # import RPi.GPIO as GPIO    # Can only be run on a RPi
 
 
@@ -10,6 +11,7 @@ def ardOutput_tuple():
         ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "").split(" ")
         soil_level = float(ard_tuple[0])
         dist_level = float(ard_tuple[1])
+        print("M: %g | Prox: %g\n" % (soil_level, dist_level))
         return soil_level, dist_level
     except ValueError:
         time.sleep(5000)
@@ -35,25 +37,25 @@ def distCheck(rasp_input):
 
 def userCheck():
     check_attempt = 0
+#     s = serial.Serial(5)
     while check_attempt < 3:
         os.system(bash_thirsty)
-        timeout = 0
         check_attempt += 1
-        while timeout < 3:
-            water_check = ardOutput_tuple()
-            print(check_attempt, timeout, water_check)
-            if water_check[0] < soil_threshold:
-                timeout += 1
-                ser.write("H".encode("utf-8"))
-            else:
-                os.system(bash_satis)
-                timeout = 3
-                check_attempt = 3
+        ser.reset_input_buffer()
+        water_check = ardOutput_tuple()
+        print(check_attempt, water_check)
+        
+        if water_check[0] < soil_threshold:
+            ser.write(struct.pack(">B", soil_threshold))
+            time.sleep(5)
+        else:
+            os.system(bash_satis)
+            check_attempt = 3
 
 
 def main():
     pass
-
+        
 
 def driver():
     dev_counter = 0
@@ -61,9 +63,7 @@ def driver():
         try:
             ard_out = ardOutput_tuple()
             soil_status = soilCheck(ard_out)
-            print("#%d) M: %g | Prox: %g\n" % (dev_counter+1,
-                                               ard_out[0],
-                                               ard_out[1]))
+            
             dev_counter += 1
             if soil_status == True:
                 dist_status = distCheck(ard_out)
@@ -84,7 +84,7 @@ def driver():
 # GPIO.setup(GPIO_LED_green, GPIO.OUT)
 
 # 
-ser = serial.Serial('/dev/ttyS0', 9600, 8, 'N', 1, timeout=3)
+ser = serial.Serial('/dev/ttyS0', 9600, 8, 'N', 1, timeout=7)
 audio_prefix = "".join(["aplay --format=S16_LE --rate=16000 ", os.getcwd()]).replace("t ", "t\\ ")
 bash_thirsty = audio_prefix + "/static_audio/thirsty.raw"
 bash_satis = audio_prefix + "/static_audio/satisfied_plant.raw"
@@ -96,9 +96,14 @@ soil_threshold = 40
 
 
 def dev():
-    ser.write("H".encode("utf-8"))
-    ser.close
-
+    dev_counter = 0
+    while dev_counter < 50:
+        try:
+            dev_counter += 1
+            ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "")#.split(" ")
+            print(ard_tuple)
+        except IndexError:
+            continue
 
 #dev()
 driver()
