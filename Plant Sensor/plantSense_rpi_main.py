@@ -37,7 +37,6 @@ def distCheck(rasp_input):
 
 def userCheck():
     check_attempt = 0
-#     s = serial.Serial(5)
     while check_attempt < 3:
         os.system(bash_thirsty)
         check_attempt += 1
