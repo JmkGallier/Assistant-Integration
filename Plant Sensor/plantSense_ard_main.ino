@@ -1,27 +1,34 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 int IRpin = 1; //Infrared sensor pin
 int MSpin = 0; //moisture sensor pin
-char receivedChar;  //variable to store info from Rasp Pi
+int receivedChar;  //variable to store info from Rasp Pi
 boolean newData = false;
 
-//If Arduino is used for LED output
-//int greenLED = 13;
-//int redLED = 12; 
-
 void setup() {  
-  Serial.begin(9600); // open serial port, set the baud rate as 9600 bps
-  // If arduino is used for LED output
-  //pinMode(greenLED, OUTPUT);
-  //pinMode(redLED, OUTPUT);
+  Serial.begin(9600);
 }
 
-float GetMoisture() {
-  float dry = (analogRead(MSpin));  // connect sensor to Analog 0
-  float reading_min = 300;          // Minimum value of sensor
-  dry = (dry-reading_min)/reading_min;      // Set dry to be a percentage of dryness
-  float moist = 1.00 - dry;         // Moisture is the inverse of dryness
+// Check Incoming Serial Data
+void recvInfo() {
+  while (Serial.available() > 0) {
+    receivedChar = Serial.read();
+    newData = true;
+  }
+}
+
+// Get Moisture Value
+int GetMoisture() {
+  float sensorRead = (analogRead(MSpin));
+  float sensorWet = 274.00;
+  float sensorDry = 325.00;
+  sensorRead = (1.00-(sensorRead-sensorWet)/sensorDry)*100.00;
+  int moist = sensorRead;
   return moist;
 }
 
+// Get IR Sensor Distance Value
 int GetDistance() {
   float IR_read = 0;
   float IR_read_offset = -36;
@@ -38,43 +45,25 @@ int GetDistance() {
   }
 }
 
-void RPi_Serial(float a, int b) {
+// Send Serial data to RPi
+void RPi_Serial(int a, int b) {
+  if (newData == false) {
     Serial.print(a);
     Serial.print(" ");
     Serial.println(b);
+  } 
+//  else {
+//    // HERE
+//    if (a < receivedChar) {
+//    }
+//    newData = false;
+//  }
 }
 
 void loop() {
-  float moisture = GetMoisture();
+  recvInfo();
+  int moisture = GetMoisture();
   int distance = GetDistance();
   RPi_Serial(moisture, distance);
-  delay(500);
-
-  //recvInfo(); // If arduino is used for LED output
-  //lightLED(); // If arduino is used for LED output
+  //delay(500);
 }
-
-// // If arduino is used for LED output
-//void recvInfo() {
-
-  //if (Serial.available() > 0) {
-    //receivedChar = Serial.read();
-    //newData = true;
-  //}
-//}
-
-// If arduino is used for LED output
-//void lightLED() {
-  //int led = (receivedChar - '0');
-  //while(newData == true) {
-    //digitalWrite(led, HIGH);
-    //delay(1000);
-    //digitalWrite(led, LOW);
-    //delay(1000);
-    //digitalWrite(led, HIGH);
-    //delay(1000);
-    //digitalWrite(led, LOW);
-    //delay(1000);
-    //newData = false;
-  //}
-//}
