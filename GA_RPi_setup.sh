@@ -24,12 +24,18 @@ while [ -n "${1-}" ]; do
 done
 
 
+# Packages needed to utilize Assistant Integration files
+install_AssistantIntegration_Dep() {
+  sudo pip3 install RPi.GPIO
+}
+
 # Script needs restriction for SUDO users
 install_GA_DEP() {
   sudo apt -qq update
   sudo apt -qq install portaudio19-dev libffi-dev libssl-dev python3-dev python3-venv python-serial python3-serial -y
 }
 
+# Install Google Assistant in a Python Environment
 install_GA() {
   python3 -m venv env
   env/bin/python3 -m pip install --default-timeout=100 --upgrade pip setuptools wheel
