@@ -49,9 +49,9 @@ install_GA_DEP() {
 
 install_GA() {
   python3 -m venv env
-  env/bin/python3 -m pip install --upgrade pip setuptools wheel
+  env/bin/python3 -m pip install --default-timeout=100 --upgrade pip setuptools wheel
   source env/bin/activate
-  python3 -m pip install --upgrade google-assistant-sdk[samples] google-auth-oauthlib[tool]
+  python3 -m pip install --default-timeout=100 --upgrade google-assistant-sdk[samples] google-auth-oauthlib[tool]
   google-oauthlib-tool --scope https://www.googleapis.com/auth/assistant-sdk-prototype --save --headless --client-secrets "${CLIENT_SECRET_PATH}"
 }
 
@@ -79,7 +79,7 @@ config_Speaker() {
 }
 
 start_Plant() {
-  pythpn3 /home/pi/Assistant-Integration/Plant\ Sensor/plantSense_rpi_main.py
+  python3 /home/pi/Assistant-Integration/Plant\ Sensor/plantSense_rpi_main.py
 }
 
 start_Calendar() {
