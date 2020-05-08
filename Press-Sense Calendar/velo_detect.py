@@ -8,6 +8,7 @@ import os
 pwd = os.getcwd()
 RPI_project_id = "pi-pillbox-ca671"
 RPI_model_id = "rasp-pillbox-46290"
+
 script_directory = os.path.dirname(os.path.realpath(__file__))
 audiofile_loc = os.path.join(script_directory, "date_query.raw").replace(" ", "\\ ")
 #command2 = os.path.join(script_directory, "!!!!!!!!!!!").replace(" ", "\\ ")

@@ -8,13 +8,15 @@ import struct
 
 def ardOutput_tuple():
     try:
+        #ser.write(struct.pack(">B", soil_threshold)) # Request sensor data from Ard
+        ser.reset_input_buffer()
         ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "").split(" ")
         soil_level = float(ard_tuple[0])
         dist_level = float(ard_tuple[1])
         print("M: %g | Prox: %g\n" % (soil_level, dist_level))
         return soil_level, dist_level
     except ValueError:
-        time.sleep(5000)
+        time.sleep(1000)
         return ardOutput_tuple()
 
 
@@ -38,17 +40,15 @@ def distCheck(rasp_input):
 def userCheck():
     check_attempt = 0
     while check_attempt < 3:
-        os.system(bash_thirsty)
         check_attempt += 1
-        ser.reset_input_buffer()
         water_check = ardOutput_tuple()
         print(check_attempt, water_check)
         
         if water_check[0] < soil_threshold:
-            ser.write(struct.pack(">B", soil_threshold))
+            os.system(bash_thirsty)
             time.sleep(5)
         else:
-            os.system(bash_satis)
+            os.system(bash_watered)
             check_attempt = 3
 
 
@@ -81,13 +81,25 @@ def driver():
 # GPIO.setmode(GPIO.BCM)
 # GPIO.setup(GPIO_LED_red, GPIO.OUT)
 # GPIO.setup(GPIO_LED_green, GPIO.OUT)
-
-# 
 ser = serial.Serial('/dev/ttyS0', 9600, 8, 'N', 1, timeout=7)
-audio_prefix = "".join(["aplay --format=S16_LE --rate=16000 ", os.getcwd()]).replace("t ", "t\\ ")
-bash_thirsty = audio_prefix + "/static_audio/thirsty.raw"
-bash_satis = audio_prefix + "/static_audio/satisfied_plant.raw"
-bash_watered = audio_prefix + "/static_audio/watered_plant.raw"
+
+#
+audio_prefix = "aplay --format=S16_LE --rate=16000 "
+
+
+script_directory = os.path.dirname(os.path.realpath(__file__))
+
+bash_thirsty = os.path.join(script_directory, "static_audio/thirsty.raw").replace(" ", "\\ ")
+bash_satis = os.path.join(script_directory, "static_audio/satisfied_plant.raw").replace(" ", "\\ ")
+bash_watered = os.path.join(script_directory, "static_audio/watered_plant.raw").replace(" ", "\\ ")
+
+bash_thirsty = (audio_prefix + bash_thirsty)
+bash_satis = (audio_prefix + bash_satis)
+bash_watered = (audio_prefix + bash_watered)
+
+
+
+
 
 # Sensor Thresholds
 dist_threshold = 0
@@ -95,14 +107,8 @@ soil_threshold = 40
 
 
 def dev():
-    dev_counter = 0
-    while dev_counter < 50:
-        try:
-            dev_counter += 1
-            ard_tuple = ser.readline().decode("utf-8").replace("\r\n", "")#.split(" ")
-            print(ard_tuple)
-        except IndexError:
-            continue
+    print(bash_thirsty, "\n", script_directory)
+
 
 #dev()
 driver()
