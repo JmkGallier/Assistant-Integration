@@ -29,7 +29,7 @@ def soilCheck(rasp_input):
 def distCheck(rasp_input):
     dist_level = rasp_input[1]
     distCheck_out = 0
-    if dist_level == True:
+    if dist_level:
         print("User in Proximity")
         distCheck_out = 1
     return distCheck_out
@@ -64,9 +64,9 @@ def driver():
             soil_status = soilCheck(ard_out)
             
             dev_counter += 1
-            if soil_status == True:
+            if soil_status:
                 dist_status = distCheck(ard_out)
-                if dist_status == True:
+                if dist_status:
                     userCheck()
                 else:
                     pass
