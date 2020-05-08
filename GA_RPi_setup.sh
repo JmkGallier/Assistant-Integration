@@ -10,6 +10,14 @@ SCRIPT_STATE_OPTIONS=(
   ["setup"]=1
 )
 
+#### USER STATE
+SCRIPT_USER="$(logname)"
+SCRIPT_OWNER="$USER"
+USER_HOME="/home/${SCRIPT_USER}"
+DEFAULT_SCRIPT_STATE="none"
+USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
+CURRENT_SCRIPT_STATE="none"
+
 #### Option Input
 while [ -n "${1-}" ]; do
   case "$1" in
