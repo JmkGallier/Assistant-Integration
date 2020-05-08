@@ -87,12 +87,12 @@ config_Speaker() {
 }
 
 start_Plant() {
-  python3 /home/pi/Assistant-Integration/Plant\ Sensor/plantSense_rpi_main.py
+  python3 /home/pi/Assistant-Integration/plantSense/plantSense_rpi.py
 }
 
 start_Calendar() {
   source /home/pi/Assistant-Integration/env/bin/activate
-  python3 /home/pi/Assistant-Integration/Press-Sense\ Calendar/velo_detect.py
+  python3 /home/pi/Assistant-Integration/pressCalendar/velo_detect.py
 }
 
 script_Main() {

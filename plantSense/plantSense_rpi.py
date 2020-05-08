@@ -81,34 +81,24 @@ def driver():
 # GPIO.setmode(GPIO.BCM)
 # GPIO.setup(GPIO_LED_red, GPIO.OUT)
 # GPIO.setup(GPIO_LED_green, GPIO.OUT)
+
+
+# Serial Connection
 ser = serial.Serial('/dev/ttyS0', 9600, 8, 'N', 1, timeout=7)
 
 #
 audio_prefix = "aplay --format=S16_LE --rate=16000 "
-
-
 script_directory = os.path.dirname(os.path.realpath(__file__))
-
 bash_thirsty = os.path.join(script_directory, "static_audio/thirsty.raw").replace(" ", "\\ ")
 bash_satis = os.path.join(script_directory, "static_audio/satisfied_plant.raw").replace(" ", "\\ ")
 bash_watered = os.path.join(script_directory, "static_audio/watered_plant.raw").replace(" ", "\\ ")
-
 bash_thirsty = (audio_prefix + bash_thirsty)
 bash_satis = (audio_prefix + bash_satis)
 bash_watered = (audio_prefix + bash_watered)
-
-
-
-
 
 # Sensor Thresholds
 dist_threshold = 0
 soil_threshold = 40
 
 
-def dev():
-    print(bash_thirsty, "\n", script_directory)
-
-
-#dev()
 driver()
