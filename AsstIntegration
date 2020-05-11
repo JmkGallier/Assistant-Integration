@@ -127,15 +127,17 @@ script_Main() {
     true)
       echo "Script should not be run as 'root' user"
       echo "Exiting script"
-      CURRENT_SCRIPT_STATE=none
+      CURRENT_SCRIPT_STATE="none"
       ;;
     false)
       case $CURRENT_SCRIPT_STATE in
       virtmic_start)
         config_VirtualMic
+        CURRENT_SCRIPT_STATE="none"
         ;;
       virtmic_play)
         play_VirtualMic
+        CURRENT_SCRIPT_STATE="none"
         ;;
       plant_sensor)
         echo "Script State: Plant Sensor"
