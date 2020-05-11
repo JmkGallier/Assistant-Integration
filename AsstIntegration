@@ -20,16 +20,16 @@ USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
 CURRENT_SCRIPT_STATE="none"
 
 #### Option Input
-while [ -n "${1-}" ]; do
+while [ -n "$1" ]; do
   case "$1" in
   -s)
     CURRENT_SCRIPT_STATE="$2"
-    if [[ ${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]} ]]; then
-      :
+    if [[ ${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]} ]]; then :
     else
       echo "${CURRENT_SCRIPT_STATE} is not a valid option"
       CURRENT_SCRIPT_STATE="none"
     fi
+    shift
     ;;
   --mic)
     MIC_test="$2"
@@ -37,6 +37,7 @@ while [ -n "${1-}" ]; do
       MIC_address="${MIC_test}"
       echo "MICROPHONE SET TO: $MIC_address"
     fi
+    shift
     ;;
   --speaker)
     SPEAKER_test="$2"
@@ -44,10 +45,12 @@ while [ -n "${1-}" ]; do
       SPEAKER_address="${SPEAKER_test}"
       echo "SPEAKER SET TO: $SPEAKER_address"
     fi
+    shift
     ;;
   --client-secret)
     CLIENT_SECRET_PATH="$2"
     echo "${CLIENT_SECRET_PATH}"
+    shift
     ;;
   *)
     echo "Option $1 not recognized" ;;
