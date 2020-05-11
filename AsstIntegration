@@ -98,15 +98,15 @@ config_Speaker() {
 }
 
 config_VirtualMic() {
-  pactl load-module module-pipe-source source_name=virtmic file="${USER_HOME}"/Assistant-Integration/virtmic format=s16le rate=16000 channels=1
+  pactl load-module module-pipe-source source_name=virtmic file=/home/pi/Assistant-Integration/virtmic format=s16le rate=16000 channels=1
   pactl set-default-source virtmic
-  echo "default-source = virtmic" > "${USER_HOME}"/.config/pulse/client.conf
+  echo "default-source = virtmic" > /home/pi/.config/pulse/client.conf
 }
 
 play_VirtualMic() {
-  cat "${USER_HOME}"/Assistant-Integration/pressCalendar/static_audio/date_query.raw > "${USER_HOME}"/Assistant-Integration/virtmic
+  cat /home/pi/Assistant-Integration/pressCalendar/static_audio/date_query.raw > /home/pi/Assistant-Integration/virtmic
   pactl unload-module module-pipe-source
-  rm "${USER_HOME}"/.config/pulse/client.conf
+  rm /home/pi/.config/pulse/client.conf
 }
 
 # Startup for Smart Plant Python script
