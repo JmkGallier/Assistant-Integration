@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 declare -A SCRIPT_STATE_OPTIONS
 SCRIPT_STATE_OPTIONS=(
   ["none"]=1
@@ -21,33 +20,40 @@ CURRENT_SCRIPT_STATE="none"
 #### Option Input
 while [ -n "${1-}" ]; do
   case "$1" in
-  -s) CURRENT_SCRIPT_STATE="$2"
-    if [[ ${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]} ]]; then :
+  -s)
+    CURRENT_SCRIPT_STATE="$2"
+    if [[ ${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]} ]]; then
+      :
     else
       echo "${CURRENT_SCRIPT_STATE} is not a valid option"
       CURRENT_SCRIPT_STATE="none"
     fi
     ;;
-  -mic) MIC_test="$2"
+  -mic)
+    MIC_test="$2"
     if [[ "$MIC_test" =~ .*",".* ]]; then
       MIC_address="${MIC_test}"
       echo "MICROPHONE SET TO: $MIC_address"
     fi
     ;;
-  -speaker) SPEAKER_test="$2"
+  -speaker)
+    SPEAKER_test="$2"
     if [[ "$SPEAKER_test" =~ .*",".* ]]; then
       SPEAKER_address="${SPEAKER_test}"
       echo "SPEAKER SET TO: $SPEAKER_address"
     fi
     ;;
-  --client-secret) CLIENT_SECRET_PATH="$2"
+  --client-secret)
+    CLIENT_SECRET_PATH="$2"
     echo "${CLIENT_SECRET_PATH}"
-  ;;
-  --) shift ; break ;;
+    ;;
+  --)
+    shift
+    break
+    ;;
   esac
   shift
 done
-
 
 # Script needs restriction for SUDO users
 install_GA_DEP() {
@@ -82,7 +88,7 @@ config_Speaker() {
     slave {
       pcm 'hw:${SPEAKER_address}'
     }
-  }" >> ~/.asoundrc
+  }" >>~/.asoundrc
   amixer set Master 70%
 }
 
@@ -107,12 +113,12 @@ script_Main() {
       case $CURRENT_SCRIPT_STATE in
       plant_sensor)
         echo "Script State: Plant Sensor"
-	start_Plant
-	CURRENT_SCRIPT_STATE="none"
+        start_Plant
+        CURRENT_SCRIPT_STATE="none"
         ;;
       calendar)
         echo "Script State: Calendar"
-	start_Calendar
+        start_Calendar
         CURRENT_SCRIPT_STATE="none"
         ;;
       setup)
@@ -132,5 +138,5 @@ script_Main() {
   done
 }
 
-sleep 3
+sleep 1
 script_Main
