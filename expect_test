@@ -7,10 +7,10 @@ spawn googlesamples-assistant-pushtotalk --project-id pi-pillbox-ca671 --device-
 
 expect {
 	"*Press Enter to send a new request...*" {
-	exec /bin/bash $scrip_dir/AsstIntegration -s virtmic_config
+	exec /bin/bash $script_dir/AsstIntegration -s virtmic_config
 	send -- "\r"
-	exec /bin/bash $scrip_dir/AsstIntegration -s virtmic_play
-	exec /bin/bash $scrip_dir/AsstIntegration -s virtmic_undo
+	exec /bin/bash $script_dir/AsstIntegration -s virtmic_play
+	exec /bin/bash $script_dir/AsstIntegration -s virtmic_undo
 	exp_continue
 	}
 
