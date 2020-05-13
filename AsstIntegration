@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## User will need to be added to groups: dialout, !audio
 declare -A SCRIPT_STATE_OPTIONS
 SCRIPT_STATE_OPTIONS=(
   ["none"]=1
@@ -7,8 +8,11 @@ SCRIPT_STATE_OPTIONS=(
   ["calendar"]=1
   ["pillbox"]=1
   ["setup"]=1
-  ["virtmic_start"]=1
+  ["virtmic_config"]=1
   ["virtmic_play"]=1
+  ["virtmic_undo"]=1
+  ["virtmic_dev"]=1
+  ["virtmic_reset"]=1
 )
 
 #### USER STATE
@@ -98,15 +102,39 @@ config_Speaker() {
 }
 
 config_VirtualMic() {
+  echo "Configuring VirtualMic..."
   pactl load-module module-pipe-source source_name=virtmic file=/home/pi/Assistant-Integration/virtmic format=s16le rate=16000 channels=1
   pactl set-default-source virtmic
   echo "default-source = virtmic" > /home/pi/.config/pulse/client.conf
+  echo "Done"
 }
 
 play_VirtualMic() {
-  cat /home/pi/Assistant-Integration/pressCalendar/static_audio/date_query.raw > /home/pi/Assistant-Integration/virtmic
+  echo "Playing query..."
+  #ffmpeg -re -i /home/pi/Assistant-Integration/pressCalendar/static_audio/calendar_input.mp3 -f s16le -ar 16000 -ac - > /home/pi/Assistant-Integration/virtmic
+  cat /home/pi/Assistant-Integration/pressCalendar/static_audio/calendar_query.raw > /home/pi/Assistant-Integration/virtmic
+  sleep 2
+  echo "Done"
+}
+
+undo_VirtualMic() {
+  echo "Removing VirtualMic Config..."
   pactl unload-module module-pipe-source
   rm /home/pi/.config/pulse/client.conf
+  #rm /home/pi/Assistant-Integration/virtmic
+  echo "Done"
+}
+
+reset_VirtualMic() {
+  pulseaudio -k
+  undo_VirtualMic
+}
+
+dev_VirtualMic() {
+  config_VirtualMic
+  echo "Intiate GA" && sleep 2
+  play_VirtualMic
+  undo_VirtualMic
 }
 
 # Startup for Smart Plant Python script
@@ -131,12 +159,24 @@ script_Main() {
       ;;
     false)
       case $CURRENT_SCRIPT_STATE in
-      virtmic_start)
+      virtmic_config)
         config_VirtualMic
         CURRENT_SCRIPT_STATE="none"
         ;;
       virtmic_play)
         play_VirtualMic
+        CURRENT_SCRIPT_STATE="none"
+        ;;
+      virtmic_undo)
+        undo_VirtualMic
+        CURRENT_SCRIPT_STATE="none"
+        ;;
+      virtmic_dev)
+        dev_VirtualMic
+        CURRENT_SCRIPT_STATE="none"
+        ;;
+      virtmic_reset)
+        reset_VirtualMic
         CURRENT_SCRIPT_STATE="none"
         ;;
       plant_sensor)
@@ -168,3 +208,4 @@ script_Main() {
 
 sleep 1
 script_Main
+exit 0
