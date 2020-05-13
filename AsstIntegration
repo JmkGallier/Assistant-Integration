@@ -16,6 +16,7 @@ SCRIPT_STATE_OPTIONS=(
 )
 
 #### USER STATE
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_USER="$(logname)"
 SCRIPT_OWNER="$USER"
 USER_HOME="/home/${SCRIPT_USER}"
@@ -103,7 +104,7 @@ config_Speaker() {
 
 config_VirtualMic() {
   echo "Configuring VirtualMic..."
-  pactl load-module module-pipe-source source_name=virtmic file=/home/pi/Assistant-Integration/virtmic format=s16le rate=16000 channels=1
+  pactl load-module module-pipe-source source_name=virtmic file="${SCRIPT_DIR}"/virtmic format=s16le rate=16000 channels=1
   pactl set-default-source virtmic
   echo "default-source = virtmic" > /home/pi/.config/pulse/client.conf
   echo "Done"
@@ -111,8 +112,8 @@ config_VirtualMic() {
 
 play_VirtualMic() {
   echo "Playing query..."
-  #ffmpeg -re -i /home/pi/Assistant-Integration/pressCalendar/static_audio/calendar_input.mp3 -f s16le -ar 16000 -ac - > /home/pi/Assistant-Integration/virtmic
-  cat /home/pi/Assistant-Integration/pressCalendar/static_audio/calendar_query.raw > /home/pi/Assistant-Integration/virtmic
+  #ffmpeg -re -i "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_input.mp3 -f s16le -ar 16000 -ac - > "${SCRIPT_DIR}"/virtmic
+  cat "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_query.raw > "${SCRIPT_DIR}"/virtmic
   sleep 2
   echo "Done"
 }
@@ -121,7 +122,7 @@ undo_VirtualMic() {
   echo "Removing VirtualMic Config..."
   pactl unload-module module-pipe-source
   rm /home/pi/.config/pulse/client.conf
-  #rm /home/pi/Assistant-Integration/virtmic
+  #rm "${SCRIPT_DIR}"/virtmic
   echo "Done"
 }
 
@@ -139,13 +140,13 @@ dev_VirtualMic() {
 
 # Startup for Smart Plant Python script
 start_Plant() {
-  python3 /home/pi/Assistant-Integration/plantSense/plantSense_rpi.py
+  python3 "${SCRIPT_DIR}"/plantSense/plantSense_rpi.py
 }
 
 # Startup for Google Assistant Env + Velostat Calendar
 start_Calendar() {
-  source /home/pi/Assistant-Integration/env/bin/activate
-  python3 /home/pi/Assistant-Integration/pressCalendar/velo_detect.py
+  source "${SCRIPT_DIR}"/env/bin/activate
+  python3 "${SCRIPT_DIR}"/pressCalendar/velo_detect.py
 }
 
 # Main Script Handler

@@ -2,7 +2,7 @@
 import serial
 import time
 import os
-import struct
+# import struct
 # import RPi.GPIO as GPIO    # Can only be run on a RPi
 
 

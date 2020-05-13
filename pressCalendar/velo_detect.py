@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-import serial
-import time
+# import serial
+# import time
 import os
-from multiprocessing import Pool
 
 
 RPI_project_id = "pi-pillbox-ca671"
@@ -18,7 +17,7 @@ date_query_location = os.path.join(pressSense_dir, date_query_location).replace(
 bash_prefix = "/bin/bash "
 expect_prefix = "/usr/bin/expect"
 
-bash_Assistant = "%s %s/expect_test" % (expect_prefix, repo_dir)
+bash_Assistant = "%s %s/expect_test %s" % (expect_prefix, repo_dir, repo_dir)
 
 
 os.system(bash_Assistant)
