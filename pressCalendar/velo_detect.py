@@ -17,7 +17,7 @@ date_query_location = os.path.join(pressSense_dir, date_query_location).replace(
 bash_prefix = "/bin/bash "
 expect_prefix = "/usr/bin/expect"
 
-bash_Assistant = "%s %s/expect_test %s" % (expect_prefix, repo_dir, repo_dir)
+bash_Assistant = "%s %s/GA_calendar_trigger.exp %s" % (expect_prefix, pressSense_dir, repo_dir)
 
 
 os.system(bash_Assistant)
