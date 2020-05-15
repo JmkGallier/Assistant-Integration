@@ -6,6 +6,7 @@ import os
 # import RPi.GPIO as GPIO    # Can only be run on a RPi
 
 
+# Takes Serial output from Arduino
 def ardOutput_tuple():
     try:
         #ser.write(struct.pack(">B", soil_threshold)) # Request sensor data from Ard
@@ -20,6 +21,7 @@ def ardOutput_tuple():
         return ardOutput_tuple()
 
 
+# Returns 1 (true) if soil-moisture is below threshold
 def soilCheck(rasp_input):
     soil_level = rasp_input[0]
     soilCheck_out = 0
@@ -27,7 +29,10 @@ def soilCheck(rasp_input):
         soilCheck_out = 1
     return soilCheck_out
 
-
+'''
+Check if Arduino returned true or false 
+Will be deprecated when Serial Duplex Communication is implemented
+'''
 def distCheck(rasp_input):
     dist_level = rasp_input[1]
     distCheck_out = 0
@@ -37,6 +42,7 @@ def distCheck(rasp_input):
     return distCheck_out
 
 
+# Prompt user to interact
 def userCheck():
     check_attempt = 0
     while check_attempt < 3:
@@ -53,16 +59,13 @@ def userCheck():
 
 
 def main():
-    pass
-        
-
-def driver():
     while True:
         try:
             ard_out = ardOutput_tuple()
             soil_status = soilCheck(ard_out)
 
             if soil_status:
+                # distCheck and if dist_status can be combined into "if ard_out[1]:"
                 dist_status = distCheck(ard_out)
                 if dist_status:
                     userCheck()
@@ -81,7 +84,7 @@ def driver():
 # GPIO.setup(GPIO_LED_green, GPIO.OUT)
 
 
-# Serial Connection
+# Serial Connection ## /dev/ttyS0 may change for some systems
 ser = serial.Serial('/dev/ttyS0', 9600, 8, 'N', 1, timeout=7)
 
 # Resolve Audio File Path and Output
@@ -96,4 +99,4 @@ bash_watered = (audio_prefix + bash_watered)
 dist_threshold = 0
 soil_threshold = 40
 
-driver()
+main()
