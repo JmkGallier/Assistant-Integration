@@ -4,6 +4,7 @@
 declare -A SCRIPT_STATE_OPTIONS
 SCRIPT_STATE_OPTIONS=(
   ["none"]=1
+  ["dev"]=1
   ["plant_sensor"]=1
   ["calendar"]=1
   ["pillbox"]=1
@@ -29,7 +30,7 @@ while [ -n "$1" ]; do
   case "$1" in
   -s)
     CURRENT_SCRIPT_STATE="$2"
-    if [[ ${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]} ]]; then :
+    if [ $"{SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]"} ]; then :
     else
       echo "${CURRENT_SCRIPT_STATE} is not a valid option"
       CURRENT_SCRIPT_STATE="none"
@@ -38,9 +39,9 @@ while [ -n "$1" ]; do
     ;;
   --mic)
     MIC_test="$2"
-    if [[ "$MIC_test" =~ .*",".* ]]; then
+    if [[ ${MIC_test} =~ .*",".* ]]; then
       MIC_address="${MIC_test}"
-      echo "MICROPHONE SET TO: $MIC_address"
+      echo "MICROPHONE SET TO: $MIC_address."
     else
       echo "[OPTION ERROR]: Option --mic must formatted correctly <card number>,<device number>"
     fi
@@ -48,17 +49,18 @@ while [ -n "$1" ]; do
     ;;
   --speaker)
     SPEAKER_test="$2"
-    if [[ "$SPEAKER_test" =~ .*",".* ]]; then
+    if [[ ${SPEAKER_test} =~ .*",".* ]]; then
       SPEAKER_address="${SPEAKER_test}"
-      echo "SPEAKER SET TO: $SPEAKER_address"
+      echo "SPEAKER SET TO: $SPEAKER_address."
     else
       echo "[OPTION ERROR]: Option --speaker must formatted correctly <card number>,<device number>"
     fi
     shift
     ;;
   --client-secrets)
+    ## Check for client secret
     CLIENT_SECRET_PATH="$2"
-    echo "${CLIENT_SECRET_PATH}"
+    [ ! -f "${CLIENT_SECRET_PATH}" ] && echo "ERROR: Client-Secret path not recognized." && CURRENT_SCRIPT_STATE="none" ||  echo "JSON File Found."
     shift
     ;;
   *)
@@ -111,6 +113,7 @@ config_VirtualMic() {
   echo "Configuring VirtualMic..."
   pactl load-module module-pipe-source source_name=virtmic file="${SCRIPT_DIR}"/virtmic format=s16le rate=16000 channels=1
   pactl set-default-source virtmic
+  # Creation of .config/pulse could be handled in initial setup phase instead of every iteration of config_virtmic
   mkdir -p "${USER_HOME}"/.config/pulse && touch "${USER_HOME}"/.config/pulse/client.conf
   echo "default-source = virtmic" > "${USER_HOME}"/.config/pulse/client.conf
   echo "Done"
@@ -126,9 +129,9 @@ play_VirtualMic() {
 
 undo_VirtualMic() {
   echo "Removing VirtualMic Config..."
+  local PULSE_CONFIG="${USER_HOME}/.config/pulse/client.conf"
   pactl unload-module module-pipe-source
-  rm "${USER_HOME}"/.config/pulse/client.conf
-  #rm "${SCRIPT_DIR}"/virtmic
+  [ -f "${PULSE_CONFIG}" ] && rm "${PULSE_CONFIG}" || echo "Pulse Config not loaded."
   echo "Done"
 }
 
@@ -144,6 +147,19 @@ dev_VirtualMic() {
   undo_VirtualMic
 }
 
+setup_Integration() {
+  if [ -n "$MIC_address" -a -n "$SPEAKER_address" -a -n "$CLIENT_SECRET_PATH" ]; then
+    install_GA_DEP
+    install_GA
+    config_Speaker
+    config_VirtualMic
+    reset_VirtualMic
+  else
+    echo "[ERROR]: Missing one or more Setup Parameters (--mic --speaker --client-secrets)."
+    echo "[INFO]: Exiting..."
+  fi
+}
+
 # Startup for Smart Plant Python script
 start_Plant() {
   python3 "${SCRIPT_DIR}"/plantSense/plantSense_rpi.py
@@ -152,21 +168,30 @@ start_Plant() {
 # Startup for Google Assistant Env + Velostat Calendar
 start_Calendar() {
   #shellcheck source=src/env/bin/activate
-  source "${SCRIPT_DIR}"/env/bin/activate
-  python3 "${SCRIPT_DIR}"/pressCalendar/velo_detect.py
+  source ${SCRIPT_DIR}/env/bin/activate
+  python3 ${SCRIPT_DIR}/pressCalendar/velo_detect.py
 }
 
 # Main Script Handler
 script_Main() {
   while [ "${CURRENT_SCRIPT_STATE}" != "none" ]; do
-    case $USER_IS_ROOT in
+  echo "${CURRENT_SCRIPT_STATE}"
+    case ${USER_IS_ROOT} in
     true)
-      echo "Script should not be run as 'root' user"
-      echo "Exiting script"
-      CURRENT_SCRIPT_STATE="none"
+      case "${CURRENT_SCRIPT_STATE}" in
+      dev)
+	echo "${MIC_address}"; echo "${SPEAKER_address}"; echo "${CLIENT_SECRET_PATH}"
+	CURRENT_SCRIPT_STATE="none"
+        ;;
+      *)
+        echo "Script should not be run as 'root' user"
+        echo "Exiting script"
+        CURRENT_SCRIPT_STATE="none"
+        ;;
+      esac
       ;;
     false)
-      case $CURRENT_SCRIPT_STATE in
+      case "${CURRENT_SCRIPT_STATE}" in
       virtmic_config)
         config_VirtualMic
         CURRENT_SCRIPT_STATE="none"
@@ -188,22 +213,15 @@ script_Main() {
         CURRENT_SCRIPT_STATE="none"
         ;;
       plant_sensor)
-        echo "Script State: Plant Sensor"
         start_Plant
         CURRENT_SCRIPT_STATE="none"
         ;;
       calendar)
-        echo "Script State: Calendar"
         start_Calendar
         CURRENT_SCRIPT_STATE="none"
         ;;
       setup)
-        echo "Script State: Setup"
-        install_GA_DEP
-        install_GA
-        config_Speaker
-        config_VirtualMic
-        reset_VirtualMic
+	setup_Integration
         CURRENT_SCRIPT_STATE="none"
         ;;
       *)
