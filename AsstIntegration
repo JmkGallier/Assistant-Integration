@@ -105,7 +105,6 @@ config_Speaker() {
       pcm 'hw:${SPEAKER_address}'
     }
   }" >> "${ALSA_CONFIG}"
-  amixer set Master 70%
 }
 
 config_VirtualMic() {
