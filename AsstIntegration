@@ -30,7 +30,7 @@ while [ -n "$1" ]; do
   case "$1" in
   -s)
     CURRENT_SCRIPT_STATE="$2"
-    if [ $"{SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]"} ]; then :
+    if [ "${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]}" ]; then :
     else
       echo "${CURRENT_SCRIPT_STATE} is not a valid option"
       CURRENT_SCRIPT_STATE="none"
@@ -148,7 +148,7 @@ dev_VirtualMic() {
 }
 
 setup_Integration() {
-  if [ -n "$MIC_address" -a -n "$SPEAKER_address" -a -n "$CLIENT_SECRET_PATH" ]; then
+  if [ -n "$MIC_address" ] && [ -n "$SPEAKER_address" ] && [ -n "$CLIENT_SECRET_PATH" ]; then
     install_GA_DEP
     install_GA
     config_Speaker
@@ -168,30 +168,30 @@ start_Plant() {
 # Startup for Google Assistant Env + Velostat Calendar
 start_Calendar() {
   #shellcheck source=src/env/bin/activate
-  source ${SCRIPT_DIR}/env/bin/activate
-  python3 ${SCRIPT_DIR}/pressCalendar/velo_detect.py
+  source "${SCRIPT_DIR}/env/bin/activate"
+  python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py"
 }
 
 # Main Script Handler
 script_Main() {
   while [ "${CURRENT_SCRIPT_STATE}" != "none" ]; do
-  echo "${CURRENT_SCRIPT_STATE}"
-    case ${USER_IS_ROOT} in
+    echo "${CURRENT_SCRIPT_STATE}"
+    case $USER_IS_ROOT in
     true)
-      case "${CURRENT_SCRIPT_STATE}" in
+      case $CURRENT_SCRIPT_STATE in
       dev)
-	echo "${MIC_address}"; echo "${SPEAKER_address}"; echo "${CLIENT_SECRET_PATH}"
-	CURRENT_SCRIPT_STATE="none"
+	      echo "${MIC_address}"; echo "${SPEAKER_address}"; echo "${CLIENT_SECRET_PATH}"
+	      CURRENT_SCRIPT_STATE="none"
         ;;
       *)
-        echo "Script should not be run as 'root' user"
-        echo "Exiting script"
+        echo "[ERROR] Script should not be run as 'root' user"
+        echo "[INFO] Exiting script"
         CURRENT_SCRIPT_STATE="none"
         ;;
       esac
       ;;
     false)
-      case "${CURRENT_SCRIPT_STATE}" in
+      case $CURRENT_SCRIPT_STATE in
       virtmic_config)
         config_VirtualMic
         CURRENT_SCRIPT_STATE="none"
@@ -221,7 +221,7 @@ script_Main() {
         CURRENT_SCRIPT_STATE="none"
         ;;
       setup)
-	setup_Integration
+	      setup_Integration
         CURRENT_SCRIPT_STATE="none"
         ;;
       *)
