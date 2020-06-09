@@ -37,6 +37,7 @@
 3.  You will now be prompted to download the credentials json file named "client_secret_<...>.json"        
     *  Make sure to store this in the /home/pi folder and not /home/pi/Downloads
     *  You will use this json file in the Google Assistant setup page.
+    *  NOTE: To make life easier, keep this file in your Google Drive in case you want to access it from a VBox.
 4. The last step in Registering your device is to specify "Traits" which we will be skipping.
 
  
