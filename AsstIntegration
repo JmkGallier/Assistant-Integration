@@ -193,7 +193,7 @@ start_Calendar() {
   #shellcheck source=src/env/bin/activate
   read_conf
   source "${SCRIPT_DIR}/env/bin/activate"
-  python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py $RPI_PROJECT $RPI_MODEL"
+  python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py" $RPI_PROJECT $RPI_MODEL
 }
 
 config_conf_content() {
