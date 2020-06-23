@@ -240,6 +240,7 @@ create_config() {
 }
 
 run_GoogleAssistant() {
+  read_conf
   source env/bin/activate
   googlesamples-assistant-pushtotalk --project-id "${RPI_PROJECT}" --device-model-id "${RPI_MODEL}"
 }
