@@ -14,6 +14,8 @@ SCRIPT_STATE_OPTIONS=(
   ["virtmic_undo"]=1
   ["virtmic_dev"]=1
   ["virtmic_reset"]=1
+  ["setup_config"]=1
+  ["GA_sample"]=1
 )
 
 #### USER STATE
@@ -24,6 +26,9 @@ USER_HOME="/home/${SCRIPT_USER}"
 DEFAULT_SCRIPT_STATE="none"
 USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
 CURRENT_SCRIPT_STATE="none"
+GA_CONFIG="${SCRIPT_DIR}/GA_RPi.conf"
+
+
 
 #### Option Input
 while [ -n "$1" ]; do
@@ -98,13 +103,13 @@ config_Speaker() {
   pcm.mic {
     type plug
     slave {
-      pcm 'hw:${MIC_address}'
+      pcm 'hw:${MIC_addr}'
     }
   }
   pcm.speaker {
     type plug
     slave {
-      pcm 'hw:${SPEAKER_address}'
+      pcm 'hw:${SPEAKER_addr}'
     }
   }" >> "${ALSA_CONFIG}"
 }
@@ -119,9 +124,19 @@ config_VirtualMic() {
   echo "Done"
 }
 
+setup_CalendarAPI() {
+  pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+
+}
+
+setup_SpeechRecog() {
+  sudo apt install python3 python3-all-dev python3-pip build-essential swig git libpulse-dev libasound2-dev
+  pip3 install pocketsphinx
+}
+
+
 play_VirtualMic() {
   echo "Playing query..."
-  #ffmpeg -re -i "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_input.mp3 -f s16le -ar 16000 -ac - > "${SCRIPT_DIR}"/virtmic
   cat "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_query.raw > "${SCRIPT_DIR}"/virtmic
   sleep 2
   echo "Done"
@@ -140,6 +155,7 @@ reset_VirtualMic() {
   undo_VirtualMic
 }
 
+# Used to test features to be implement
 dev_VirtualMic() {
   config_VirtualMic
   echo "Intiate GA" && sleep 2
@@ -148,14 +164,16 @@ dev_VirtualMic() {
 }
 
 setup_Integration() {
-  if [ -n "$MIC_address" ] && [ -n "$SPEAKER_address" ] && [ -n "$CLIENT_SECRET_PATH" ]; then
+  if [ -n "$CLIENT_SECRET_PATH" ]; then
+    [ ! -f "${GA_CONFIG}" ] && create_config
+    read_conf
     install_GA_DEP
     install_GA
     config_Speaker
     config_VirtualMic
     reset_VirtualMic
   else
-    echo "[ERROR]: Missing one or more Setup Parameters (--mic --speaker --client-secrets)."
+    echo "[ERROR]: Missing one or more Setup Parameters (--client-secrets)."
     echo "[INFO]: Exiting..."
   fi
 }
@@ -169,7 +187,59 @@ start_Plant() {
 start_Calendar() {
   #shellcheck source=src/env/bin/activate
   source "${SCRIPT_DIR}/env/bin/activate"
-  python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py"
+  python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py $RPI_PROJECT $RPI_MODEL"
+}
+
+config_conf_content() {
+    echo "RPI_MODEL='$RPI_MODEL'"
+    echo "RPI_PROJECT='$RPI_PROJECT'"
+    echo "MIC_addr='$MIC_addr'"
+    echo "SPEAKER_addr='$SPEAKER_addr'"
+}
+
+create_config() {
+  echo "GA_RPi.conf not found, you will now be asked to make one."
+  local RPI_MODEL RPI_PROJECT MIC_addr SPEAKER_addr
+  local CONFIRM_STATE=0
+  while [ "${CONFIRM_STATE}" == 0 ]; do
+    printf "\nPlease provide Model ID, Project ID, Microphone (Device#,Card#), and Speaker(Device#,Card#) below:\n"
+    read -rp "Model ID: " RPI_MODEL
+    read -rp "Project ID: " RPI_PROJECT
+    read -rp "Microphone Card & Device (#,#): " MIC_addr
+    read -rp "Speaker Card & Device (#,#): " SPEAKER_addr
+    printf "\n"
+    echo "Model ID: $RPI_MODEL"
+    echo "Project ID: $RPI_PROJECT"
+    echo "Microphone: $MIC_addr"
+    echo "Speaker: $SPEAKER_addr"
+    printf "\nAre the details above correct?\n"
+    select yn in "Yes" "No"; do
+      case $yn in
+      Yes)
+        CONFIRM_STATE=1
+        break
+        ;;
+      No) break ;;
+      esac
+    done
+  done
+
+  if [ -f "${GA_CONFIG}" ]; then
+    if [ -f "${GA_CONFIG}.bak" ]; then
+      rm -rf "${GA_CONFIG}.bak"
+    fi
+    mv "${GA_CONFIG}" "${GA_CONFIG}.bak"
+  fi
+  config_conf_content >> "${GA_CONFIG}"
+}
+
+read_conf() {
+  . GA_RPi.conf
+}
+
+run_GoogleAssistant() {
+  source env/bin/activate
+  googlesamples-assistant-pushtotalk --project-id "${RPI_PROJECT}" --device-model-id "${RPI_MODEL}"
 }
 
 # Main Script Handler
@@ -180,7 +250,7 @@ script_Main() {
     true)
       case $CURRENT_SCRIPT_STATE in
       dev)
-	      echo "${MIC_address}"; echo "${SPEAKER_address}"; echo "${CLIENT_SECRET_PATH}"
+	      read_conf
 	      CURRENT_SCRIPT_STATE="none"
         ;;
       *)
@@ -192,6 +262,14 @@ script_Main() {
       ;;
     false)
       case $CURRENT_SCRIPT_STATE in
+      GA_sample)
+        run_GoogleAssistant
+        CURRENT_SCRIPT_STATE="none"
+        ;;
+      setup_config)
+        create_config
+        CURRENT_SCRIPT_STATE="none"
+        ;;
       virtmic_config)
         config_VirtualMic
         CURRENT_SCRIPT_STATE="none"
