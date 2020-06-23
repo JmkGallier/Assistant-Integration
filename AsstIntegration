@@ -75,6 +75,11 @@ while [ -n "$1" ]; do
   shift
 done
 
+# Read configuration varables stored in GA_RPi.conf
+read_conf() {
+  . GA_RPi.conf
+}
+
 # Install dependencies for Embedded Python Google Assistant
 install_GA_DEP() {
   sudo apt -qq update
@@ -186,6 +191,7 @@ start_Plant() {
 # Startup for Google Assistant Env + Velostat Calendar
 start_Calendar() {
   #shellcheck source=src/env/bin/activate
+  read_conf
   source "${SCRIPT_DIR}/env/bin/activate"
   python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py $RPI_PROJECT $RPI_MODEL"
 }
@@ -231,10 +237,6 @@ create_config() {
     mv "${GA_CONFIG}" "${GA_CONFIG}.bak"
   fi
   config_conf_content >> "${GA_CONFIG}"
-}
-
-read_conf() {
-  . GA_RPi.conf
 }
 
 run_GoogleAssistant() {

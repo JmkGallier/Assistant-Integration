@@ -5,7 +5,7 @@ set repo_dir [lindex $argv 0];
 set proj_id [lindex $argv 1];
 set mod_id [lindex $argv 2];
 
-spawn googlesamples-assistant-pushtotalk --project-id $mod_id --device-model-id $proj_id -v
+spawn googlesamples-assistant-pushtotalk --project-id $proj_id --device-model-id $mod_id -v
 
 expect {
 	"*Press Enter to send a new request...*" {
