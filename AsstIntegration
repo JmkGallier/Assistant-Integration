@@ -23,7 +23,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_USER=$(printf '%s\n' "${SUDO_USER:-$USER}")
 SCRIPT_OWNER="$USER"
 USER_HOME="/home/${SCRIPT_USER}"
-DEFAULT_SCRIPT_STATE="none"
 USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
 CURRENT_SCRIPT_STATE="none"
 GA_CONFIG="${SCRIPT_DIR}/GA_RPi.conf"
@@ -190,17 +189,17 @@ start_Plant() {
 
 # Startup for Google Assistant Env + Velostat Calendar
 start_Calendar() {
-  #shellcheck source=src/env/bin/activate
   read_conf
+  #shellcheck source=src/env/bin/activate
   source "${SCRIPT_DIR}/env/bin/activate"
   python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py" "$RPI_PROJECT $RPI_MODEL"
 }
 
 config_conf_content() {
-    echo "RPI_MODEL='$RPI_MODEL'"
-    echo "RPI_PROJECT='$RPI_PROJECT'"
-    echo "MIC_addr='$MIC_addr'"
-    echo "SPEAKER_addr='$SPEAKER_addr'"
+  echo "RPI_MODEL='$RPI_MODEL'"
+  echo "RPI_PROJECT='$RPI_PROJECT'"
+  echo "MIC_addr='$MIC_addr'"
+  echo "SPEAKER_addr='$SPEAKER_addr'"
 }
 
 create_config() {
