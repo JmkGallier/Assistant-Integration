@@ -41,26 +41,6 @@ while [ -n "$1" ]; do
     fi
     shift
     ;;
-  --mic)
-    MIC_test="$2"
-    if [[ ${MIC_test} =~ .*",".* ]]; then
-      MIC_address="${MIC_test}"
-      echo "MICROPHONE SET TO: $MIC_address."
-    else
-      echo "[OPTION ERROR]: Option --mic must formatted correctly <card number>,<device number>"
-    fi
-    shift
-    ;;
-  --speaker)
-    SPEAKER_test="$2"
-    if [[ ${SPEAKER_test} =~ .*",".* ]]; then
-      SPEAKER_address="${SPEAKER_test}"
-      echo "SPEAKER SET TO: $SPEAKER_address."
-    else
-      echo "[OPTION ERROR]: Option --speaker must formatted correctly <card number>,<device number>"
-    fi
-    shift
-    ;;
   --client-secrets)
     ## Check for client secret
     CLIENT_SECRET_PATH="$2"
