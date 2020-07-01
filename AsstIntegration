@@ -52,6 +52,7 @@ check_ScriptDriver() {
   if [[ ${CASE_ARRAY[$SCRIPT_DRIVER_STATE]} ]]; then
     shift
   else
+    printf "%s\n" "${!CASE_ARRAY[@]}"
     error_incorrectDriver
   fi
 }
@@ -348,6 +349,8 @@ script_Main_GA() {
     ;;
   esac
 }
+
+#### END Function Declarations
 
 
 #### Option Input
