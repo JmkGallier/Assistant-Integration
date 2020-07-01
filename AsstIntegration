@@ -374,7 +374,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
         shift
         ;;
       *)
-        error_incorrectArg "$1"
+        echo "Not a valid argument"
         ;;
       esac
       shift
