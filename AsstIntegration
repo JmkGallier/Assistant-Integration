@@ -298,7 +298,7 @@ script_Main_Setup() {
   case $USER_IS_ROOT in
   false)
     case $SCRIPT_DRIVER_STATE in
-    GA)
+    googlesample)
       setup_Integration
       ;;
     calendar_API)
