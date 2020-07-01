@@ -1,22 +1,33 @@
 #!/bin/bash
 
-## User will need to be added to groups: dialout, !audio
-declare -A SCRIPT_STATE_OPTIONS
-SCRIPT_STATE_OPTIONS=(
-  ["none"]=1
-  ["dev"]=1
-  ["plant_sensor"]=1
+### SCRIPT INTERACTIONS
+# Below are scripts that interact with this script
+# velo_detect.py
+# GA_calendar_trigger.sh
+# GoogCal_api.py
+# plantSense_rpi.py
+
+declare -A SCRIPT_SETUP_OPTIONS=(
+  ["googlesample"]=1
+  ["virtmic"]=1
   ["calendar"]=1
-  ["pillbox"]=1
-  ["setup"]=1
-  ["virtmic_config"]=1
-  ["virtmic_play"]=1
-  ["virtmic_undo"]=1
-  ["virtmic_dev"]=1
-  ["virtmic_reset"]=1
-  ["setup_config"]=1
-  ["GA_sample"]=1
+  ["plant"]=1
 )
+
+declare -A SCRIPT_PROTO_OPTIONS=(
+  ["calendar"]=1
+  ["plant"]=1
+  ["doorknob"]=1
+)
+
+declare -A SCRIPT_VIRTMIC_OPTIONS=(
+  ["config"]=1
+  ["undo"]=1
+  ["reset"]=1
+  ["play"]=1
+)
+
+declare -A CASE_ARRAY
 
 #### USER STATE
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -27,35 +38,79 @@ USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
 SCRIPT_CURRENT_STATE="none"
 GA_CONFIG="${SCRIPT_DIR}/GA_RPi.conf"
 
+#
+error_incorrectDriver() {
+  printf "[ERROR] Incorrect Driver Argument: %s\n" "$SCRIPT_DRIVER_STATE"
+  printf "[INFO]Please enter ONE of the following: \n"
+  printf "%s\n" "${!CASE_ARRAY[@]}"
+  printf "\n[INFO]Exiting nixTools...\n"
+  exit 1
+}
 
+#
+check_ScriptDriver() {
+  if [[ ${CASE_ARRAY[$SCRIPT_DRIVER_STATE]} ]]; then
+    shift
+  else
+    error_incorrectDriver
+  fi
+}
 
-#### Option Input
-while [ -n "$1" ]; do
-  case "$1" in
-  -s)
-    CURRENT_SCRIPT_STATE="$2"
-    if [ "${SCRIPT_STATE_OPTIONS[$CURRENT_SCRIPT_STATE]}" ]; then :
-    else
-      echo "${CURRENT_SCRIPT_STATE} is not a valid option"
-      CURRENT_SCRIPT_STATE="none"
+#
+error_incorrectArg() {
+  echo "$1 Not a valid argument for GA"
+  printf "Exiting Script..."
+  exit 1
+}
+
+#
+config_conf_content() {
+  echo "RPI_MODEL='$RPI_MODEL'"
+  echo "RPI_PROJECT='$RPI_PROJECT'"
+  echo "MIC_addr='$MIC_addr'"
+  echo "SPEAKER_addr='$SPEAKER_addr'"
+}
+
+#
+create_config() {
+  echo "GA_RPi.conf not found, you will now be asked to make one."
+  local RPI_MODEL RPI_PROJECT MIC_addr SPEAKER_addr
+  local CONFIRM_STATE=0
+  while [ "${CONFIRM_STATE}" == 0 ]; do
+    printf "\nPlease provide Model ID, Project ID, Microphone (Device#,Card#), and Speaker(Device#,Card#) below:\n"
+    read -rp "Model ID: " RPI_MODEL
+    read -rp "Project ID: " RPI_PROJECT
+    read -rp "Microphone Card & Device (#,#): " MIC_addr
+    read -rp "Speaker Card & Device (#,#): " SPEAKER_addr
+    printf "\n"
+    echo "Model ID: $RPI_MODEL"
+    echo "Project ID: $RPI_PROJECT"
+    echo "Microphone: $MIC_addr"
+    echo "Speaker: $SPEAKER_addr"
+    printf "\nAre the details above correct?\n"
+    select yn in "Yes" "No"; do
+      case $yn in
+      Yes)
+        CONFIRM_STATE=1
+        break
+        ;;
+      No) break ;;
+      esac
+    done
+  done
+
+  if [ -f "${GA_CONFIG}" ]; then
+    if [ -f "${GA_CONFIG}.bak" ]; then
+      rm -rf "${GA_CONFIG}.bak"
     fi
-    shift
-    ;;
-  --client-secrets)
-    ## Check for client secret
-    CLIENT_SECRET_PATH="$2"
-    [ ! -f "${CLIENT_SECRET_PATH}" ] && echo "ERROR: Client-Secret path not recognized." && CURRENT_SCRIPT_STATE="none" ||  echo "JSON File Found."
-    shift
-    ;;
-  *)
-    echo "Option $1 not recognized"
-    ;;
-  esac
-  shift
-done
+    mv "${GA_CONFIG}" "${GA_CONFIG}.bak"
+  fi
+  config_conf_content >> "${GA_CONFIG}"
+}
 
-# Read configuration varables stored in GA_RPi.conf
+# Read configuration variables stored in GA_RPi.conf
 read_conf() {
+  [ ! -f "${GA_CONFIG}" ] && create_config
   . GA_RPi.conf
 }
 
@@ -155,7 +210,6 @@ setup_Integration() {
     install_GA
     config_Speaker
     config_VirtualMic
-    reset_VirtualMic
   else
     echo "[ERROR]: Missing one or more Setup Parameters (--client-secrets)."
     echo "[INFO]: Exiting..."
@@ -175,125 +229,233 @@ start_Calendar() {
   python3 "${SCRIPT_DIR}/pressCalendar/velo_detect.py" "${RPI_PROJECT}" "${RPI_MODEL}"
 }
 
-config_conf_content() {
-  echo "RPI_MODEL='$RPI_MODEL'"
-  echo "RPI_PROJECT='$RPI_PROJECT'"
-  echo "MIC_addr='$MIC_addr'"
-  echo "SPEAKER_addr='$SPEAKER_addr'"
-}
-
-create_config() {
-  echo "GA_RPi.conf not found, you will now be asked to make one."
-  local RPI_MODEL RPI_PROJECT MIC_addr SPEAKER_addr
-  local CONFIRM_STATE=0
-  while [ "${CONFIRM_STATE}" == 0 ]; do
-    printf "\nPlease provide Model ID, Project ID, Microphone (Device#,Card#), and Speaker(Device#,Card#) below:\n"
-    read -rp "Model ID: " RPI_MODEL
-    read -rp "Project ID: " RPI_PROJECT
-    read -rp "Microphone Card & Device (#,#): " MIC_addr
-    read -rp "Speaker Card & Device (#,#): " SPEAKER_addr
-    printf "\n"
-    echo "Model ID: $RPI_MODEL"
-    echo "Project ID: $RPI_PROJECT"
-    echo "Microphone: $MIC_addr"
-    echo "Speaker: $SPEAKER_addr"
-    printf "\nAre the details above correct?\n"
-    select yn in "Yes" "No"; do
-      case $yn in
-      Yes)
-        CONFIRM_STATE=1
-        break
-        ;;
-      No) break ;;
-      esac
-    done
-  done
-
-  if [ -f "${GA_CONFIG}" ]; then
-    if [ -f "${GA_CONFIG}.bak" ]; then
-      rm -rf "${GA_CONFIG}.bak"
-    fi
-    mv "${GA_CONFIG}" "${GA_CONFIG}.bak"
-  fi
-  config_conf_content >> "${GA_CONFIG}"
-}
-
+# Activate embedded Google Assistant
 run_GoogleAssistant() {
   read_conf
   source env/bin/activate
   googlesamples-assistant-pushtotalk --project-id "${RPI_PROJECT}" --device-model-id "${RPI_MODEL}"
 }
 
-# Main Script Handler
-script_Main() {
-  while [ "${CURRENT_SCRIPT_STATE}" != "none" ]; do
-    echo "${CURRENT_SCRIPT_STATE}"
-    case $USER_IS_ROOT in
-    true)
-      case $CURRENT_SCRIPT_STATE in
-      dev)
-	      read_conf
-	      CURRENT_SCRIPT_STATE="none"
-        ;;
-      *)
-        echo "[ERROR] Script should not be run as 'root' user"
-        echo "[INFO] Exiting script"
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      esac
+# Handler for 'Virtmic' level script functions
+script_Main_Virtmic() {
+  case $USER_IS_ROOT in
+  false)
+    case $SCRIPT_CURRENT_STATE in
+    play)
+      play_VirtualMic
       ;;
-    false)
-      case $CURRENT_SCRIPT_STATE in
-      GA_sample)
-        run_GoogleAssistant
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      setup_config)
-        create_config
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      virtmic_config)
-        config_VirtualMic
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      virtmic_play)
-        play_VirtualMic
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      virtmic_undo)
-        undo_VirtualMic
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      virtmic_dev)
-        dev_VirtualMic
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      virtmic_reset)
-        reset_VirtualMic
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      plant_sensor)
-        start_Plant
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      calendar)
-        start_Calendar
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      setup)
-	      setup_Integration
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      *)
-        echo "Invalid Script State: ${CURRENT_SCRIPT_STATE}"
-        CURRENT_SCRIPT_STATE="none"
-        ;;
-      esac
+    reset)
+      reset_VirtualMic
+      ;;
+    undo)
+      undo_VirtualMic
+      ;;
+    config)
+      config_VirtualMic
+      ;;
+    *)
+      echo "Unrecognized State, How did you get here?"
+      exit 1
       ;;
     esac
-  done
+    ;;
+  true)
+    echo "Cannot be run as root"
+    exit 1
+    ;;
+  esac
 }
 
-sleep 1
+# Handler for 'Prototype' level script functions
+script_Main_Proto() {
+  case $USER_IS_ROOT in
+  false)
+    case $SCRIPT_DRIVER_STATE in
+    plant)
+      start_Plant
+      ;;
+    calendar)
+      start_Calendar
+      ;;
+    doorknob)
+      echo "Update script_Main_Proto with a 'doorknob' function"
+      ;;
+    *)
+      echo "Unrecognized State, How did you get here?"
+      exit 1
+      ;;
+    esac
+    ;;
+  true)
+    echo "Cannot be run as root"
+    exit 1
+    ;;
+  esac
+}
+
+# Handler for 'Setup' level script functions
+script_Main_Setup() {
+  case $USER_IS_ROOT in
+  false)
+    case $SCRIPT_DRIVER_STATE in
+    GA)
+      setup_Integration
+      ;;
+    calendar_API)
+      echo "Please update 'script_Main_Setup' with function"
+      ;;
+    speech_API)
+      echo "Please update 'script_Main_Setup' with function"
+      ;;
+    CHECK)
+      # Create check for all files dependent files
+      ;;
+    config)
+      create_config
+      ;;
+    *)
+      echo "Unrecognized State, How did you get here?"
+      exit 1
+      ;;
+    esac
+    ;;
+  true)
+    echo "Cannot be run as root"
+    exit 1
+    ;;
+  esac
+}
+
+# Handler for 'GA' (Google Assistant) level script functions
+script_Main_GA() {
+  case $USER_IS_ROOT in
+  false)
+  case $GA_AUTO_STATE in
+  true) # Prompt-less Google Assistant
+    ;;
+  false) # Google Assistant with Prompt
+    run_GoogleAssistant
+    ;;
+  *)
+    echo "Unrecognized State, How did you get here?"
+    exit 1
+    ;;
+  esac
+    ;;
+  true)
+    echo "Cannot be run as root"
+    exit 1
+    ;;
+  esac
+}
+
+
+#### Option Input
+while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
+  case "$1" in
+  Setup)
+    echo "Hit setup"
+    SCRIPT_CURRENT_STATE="$1"
+    SCRIPT_DRIVER_STATE="${2:-"None"}"
+    shift
+
+    for K in "${!SCRIPT_SETUP_OPTIONS[@]}"; do
+      CASE_ARRAY[$K]=1
+    done
+    check_ScriptDriver
+
+    while [ -n "$1" ]; do
+      case "$1" in
+      --client-secrets)
+        ## Check for client secret
+        CLIENT_SECRET_PATH="$2"
+        shift
+        ;;
+      *)
+        error_incorrectArg "$1"
+        ;;
+      esac
+      shift
+    done
+    ;;
+  Proto)
+    SCRIPT_CURRENT_STATE="$1"
+    SCRIPT_DRIVER_STATE="${2:-"None"}"
+    shift
+
+    for K in "${!SCRIPT_PROTO_OPTIONS[@]}"; do
+      CASE_ARRAY[$K]=1
+    done
+    check_ScriptDriver
+    ;;
+  GA)
+    SCRIPT_CURRENT_STATE="$1"
+    GA_AUTO_STATE="false"
+    shift
+    while [ -n "${1-}" ]; do
+      case "$1" in
+      -e)
+        GA_AUTO_STATE="true"
+        shift
+        ;;
+      *)
+        error_incorrectArg "$1"
+        ;;
+      esac
+    done
+
+    ;;
+  Virtmic)
+    SCRIPT_CURRENT_STATE="$1"
+    SCRIPT_DRIVER_STATE="${2:-"None"}"
+    shift
+
+    for K in "${!SCRIPT_VIRTMIC_OPTIONS[@]}"; do
+      CASE_ARRAY[$K]=1
+    done
+    check_ScriptDriver
+
+    while [ -n "${1-}" ]; do
+      case "$1" in
+      -e)
+        GA_AUTO_STATE="true"
+        shift
+        ;;
+      *)
+        error_incorrectArg "$1"
+        ;;
+      esac
+    done
+    ;;
+  *)
+    echo "$1 Not a valid option"
+    echo "Exiting Script"
+    exit 1
+    ;;
+  esac
+done
+
+script_Main() {
+  echo "Script State: ${SCRIPT_CURRENT_STATE}"
+  case $SCRIPT_CURRENT_STATE in
+  Setup)
+    script_Main_Setup
+    ;;
+  Proto)
+    script_Main_Proto
+    ;;
+  GA)
+    script_Main_GA
+    ;;
+  Virtmic)
+    script_Main_Virtmic
+    ;;
+  *)
+    echo "Unrecognized State, How did you get here?"
+    exit 1
+    ;;
+  esac
+}
+
 script_Main
 exit 0
