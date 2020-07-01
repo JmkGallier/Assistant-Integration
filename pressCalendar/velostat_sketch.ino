@@ -1,6 +1,5 @@
-// Analog input pin that the Velostat is connected to
-const velostatPin = A0;
-float sensorValue = 0;        
+const int velostatPin = A0;
+float sensorValue = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -8,7 +7,15 @@ void setup() {
 }
 
 void loop() {
-  sensorValue = analogRead(analogInPin);
-  Serial.print("sensor = " );
-  Serial.println(sensorValue);
+  sensorValue = analogRead(velostatPin);
+  
+  String sensorState = "Not Pressed";
+  if (sensorValue < 60) {
+    sensorState = "Pressed";
+  } else if (sensorValue > 300) {
+    sensorState = "Disconnected";
+  }
+
+  Serial.println(sensorState);
+  delay(500);
 }
