@@ -9,10 +9,10 @@ spawn googlesamples-assistant-pushtotalk --project-id $proj_id --device-model-id
 
 expect {
 	"*Press Enter to send a new request...*" {
-	    exec /bin/bash $repo_dir/AsstIntegration -s virtmic_config
+	    exec /bin/bash $repo_dir/AsstIntegration Virtmic config
 	    send -- "\r"
-	    exec /bin/bash $repo_dir/AsstIntegration -s virtmic_play
-	    exec /bin/bash $repo_dir/AsstIntegration -s virtmic_undo
+	    exec /bin/bash $repo_dir/AsstIntegration Virtmic play
+	    exec /bin/bash $repo_dir/AsstIntegration Virtmic undo
 	    exp_continue
 	}
 
