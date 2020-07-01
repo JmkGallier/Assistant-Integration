@@ -24,7 +24,7 @@ SCRIPT_USER=$(printf '%s\n' "${SUDO_USER:-$USER}")
 SCRIPT_OWNER="$USER"
 USER_HOME="/home/${SCRIPT_USER}"
 USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
-CURRENT_SCRIPT_STATE="none"
+SCRIPT_CURRENT_STATE="none"
 GA_CONFIG="${SCRIPT_DIR}/GA_RPi.conf"
 
 
