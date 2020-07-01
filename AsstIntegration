@@ -58,8 +58,8 @@ check_ScriptDriver() {
 
 #
 error_incorrectArg() {
-  echo "$1 Not a valid argument for GA"
-  printf "Exiting Script..."
+  echo "$1 Not a valid argument for ${SCRIPT_CURRENT_STATE}"
+  printf "Exiting Script...\n"
   exit 1
 }
 
@@ -354,7 +354,6 @@ script_Main_GA() {
 while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
   case "$1" in
   Setup)
-    echo "Hit setup"
     SCRIPT_CURRENT_STATE="$1"
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
