@@ -364,6 +364,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     for K in "${!SCRIPT_SETUP_OPTIONS[@]}"; do
       CASE_ARRAY[$K]=1
     done
+    printf "%s\n" "${!CASE_ARRAY[@]}"
     check_ScriptDriver
 
     while [ -n "$1" ]; do
