@@ -154,16 +154,6 @@ config_Speaker() {
   }" >>"${ALSA_CONFIG}"
 }
 
-config_VirtualMic() {
-  echo "Configuring VirtualMic..."
-  pactl load-module module-pipe-source source_name=virtmic file="${SCRIPT_DIR}"/virtmic format=s16le rate=16000 channels=1
-  pactl set-default-source virtmic
-  # Creation of .config/pulse could be handled in initial setup phase instead of every iteration of config_virtmic
-  mkdir -p "${USER_HOME}"/.config/pulse && touch "${USER_HOME}"/.config/pulse/client.conf
-  echo "default-source = virtmic" >"${USER_HOME}"/.config/pulse/client.conf
-  echo "Done"
-}
-
 setup_CalendarAPI() {
   pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
@@ -172,6 +162,16 @@ setup_CalendarAPI() {
 setup_SpeechRecog() {
   sudo apt install python3 python3-all-dev python3-pip build-essential swig git libpulse-dev libasound2-dev
   pip3 install pocketsphinx
+}
+
+config_VirtualMic() {
+  echo "Configuring VirtualMic..."
+  pactl load-module module-pipe-source source_name=virtmic file="${SCRIPT_DIR}"/virtmic format=s16le rate=16000 channels=1
+  pactl set-default-source virtmic
+  # Creation of .config/pulse could be handled in initial setup phase instead of every iteration of config_virtmic
+  mkdir -p "${USER_HOME}"/.config/pulse && touch "${USER_HOME}"/.config/pulse/client.conf
+  echo "default-source = virtmic" >"${USER_HOME}"/.config/pulse/client.conf
+  echo "Done"
 }
 
 play_VirtualMic() {
@@ -210,8 +210,9 @@ setup_Integration() {
     install_GA
     config_Speaker
     config_VirtualMic
+    reset_VirtualMic
   else
-    echo "[ERROR]: Missing one or more Setup Parameters (--client-secrets)."
+    echo "[ERROR]: Missing one Setup Parameter (--client-secrets)."
     echo "[INFO]: Exiting..."
   fi
 }
