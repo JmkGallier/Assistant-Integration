@@ -30,7 +30,7 @@ declare -A SCRIPT_VIRTMIC_OPTIONS=(
 declare -A CASE_ARRAY
 
 #### USER STATE
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 SCRIPT_USER=$(printf '%s\n' "${SUDO_USER:-$USER}")
 SCRIPT_OWNER="$USER"
 USER_HOME="/home/${SCRIPT_USER}"
@@ -49,6 +49,11 @@ error_incorrectDriver() {
 
 #
 check_ScriptDriver() {
+
+  for K in "${!1[@]}"; do
+    CASE_ARRAY[$K]=1
+  done
+
   if [[ ${CASE_ARRAY[$SCRIPT_DRIVER_STATE]} ]]; then
     shift
   else
@@ -106,7 +111,7 @@ create_config() {
     fi
     mv "${GA_CONFIG}" "${GA_CONFIG}.bak"
   fi
-  config_conf_content >> "${GA_CONFIG}"
+  config_conf_content >>"${GA_CONFIG}"
 }
 
 # Read configuration variables stored in GA_RPi.conf
@@ -151,7 +156,7 @@ config_Speaker() {
     slave {
       pcm 'hw:${SPEAKER_addr}'
     }
-  }" >> "${ALSA_CONFIG}"
+  }" >>"${ALSA_CONFIG}"
 }
 
 config_VirtualMic() {
@@ -160,7 +165,7 @@ config_VirtualMic() {
   pactl set-default-source virtmic
   # Creation of .config/pulse could be handled in initial setup phase instead of every iteration of config_virtmic
   mkdir -p "${USER_HOME}"/.config/pulse && touch "${USER_HOME}"/.config/pulse/client.conf
-  echo "default-source = virtmic" > "${USER_HOME}"/.config/pulse/client.conf
+  echo "default-source = virtmic" >"${USER_HOME}"/.config/pulse/client.conf
   echo "Done"
 }
 
@@ -174,10 +179,9 @@ setup_SpeechRecog() {
   pip3 install pocketsphinx
 }
 
-
 play_VirtualMic() {
   echo "Playing query..."
-  cat "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_query.raw > "${SCRIPT_DIR}"/virtmic
+  cat "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_query.raw >"${SCRIPT_DIR}"/virtmic
   sleep 2
   echo "Done"
 }
@@ -331,17 +335,17 @@ script_Main_Setup() {
 script_Main_GA() {
   case $USER_IS_ROOT in
   false)
-  case $GA_AUTO_STATE in
-  true) # Prompt-less Google Assistant
-    ;;
-  false) # Google Assistant with Prompt
-    run_GoogleAssistant
-    ;;
-  *)
-    echo "Unrecognized State, How did you get here?"
-    exit 1
-    ;;
-  esac
+    case $GA_AUTO_STATE in
+    true) # Prompt-less Google Assistant
+      ;;
+    false) # Google Assistant with Prompt
+      run_GoogleAssistant
+      ;;
+    *)
+      echo "Unrecognized State, How did you get here?"
+      exit 1
+      ;;
+    esac
     ;;
   true)
     echo "Cannot be run as root"
@@ -352,7 +356,6 @@ script_Main_GA() {
 
 #### END Function Declarations
 
-
 #### Option Input
 while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
   case "$1" in
@@ -361,11 +364,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    for K in "${!SCRIPT_SETUP_OPTIONS[@]}"; do
-      CASE_ARRAY[$K]=1
-    done
-    printf "%s\n" "${!CASE_ARRAY[@]}"
-    check_ScriptDriver
+    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}"
 
     while [ -n "$1" ]; do
       case "$1" in
@@ -386,10 +385,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    for K in "${!SCRIPT_PROTO_OPTIONS[@]}"; do
-      CASE_ARRAY[$K]=1
-    done
-    check_ScriptDriver
+    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}"
     ;;
   GA)
     SCRIPT_CURRENT_STATE="$1"
@@ -406,29 +402,13 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
         ;;
       esac
     done
-
     ;;
   Virtmic)
     SCRIPT_CURRENT_STATE="$1"
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    for K in "${!SCRIPT_VIRTMIC_OPTIONS[@]}"; do
-      CASE_ARRAY[$K]=1
-    done
-    check_ScriptDriver
-
-    while [ -n "${1-}" ]; do
-      case "$1" in
-      -e)
-        GA_AUTO_STATE="true"
-        shift
-        ;;
-      *)
-        error_incorrectArg "$1"
-        ;;
-      esac
-    done
+    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}"
     ;;
   *)
     echo "$1 Not a valid option"
