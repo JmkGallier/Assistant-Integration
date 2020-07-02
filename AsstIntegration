@@ -240,7 +240,7 @@ run_GoogleAssistant() {
 script_Main_Virtmic() {
   case $USER_IS_ROOT in
   false)
-    case $SCRIPT_CURRENT_STATE in
+    case $SCRIPT_DRIVER_STATE in
     play)
       play_VirtualMic
       ;;
