@@ -43,7 +43,7 @@ error_incorrectDriver() {
   printf "[ERROR] Incorrect Driver Argument: %s\n" "$SCRIPT_DRIVER_STATE"
   printf "[INFO]Please enter ONE of the following: \n"
   printf "%s\n" "${!CHECK_ARRAY[@]}"
-  printf "\n[INFO]Exiting nixTools...\n"
+  printf "\n[INFO]Exiting Script...\n"
   exit 1
 }
 
@@ -359,7 +359,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    check_ScriptDriver "${SCRIPT_SETUP_OPTIONS[@]}" && shift
+    check_ScriptDriver SCRIPT_SETUP_OPTIONS && shift
 
     while [ -n "$1" ]; do
       case "$1" in
@@ -380,7 +380,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}" && shift
+    check_ScriptDriver SCRIPT_PROTO_OPTIONS && shift
     ;;
   GA)
     SCRIPT_CURRENT_STATE="$1"
@@ -403,7 +403,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    check_ScriptDriver "${SCRIPT_VIRTMIC_OPTIONS[@]}" && shift
+    check_ScriptDriver SCRIPT_VIRTMIC_OPTIONS && shift
     ;;
   *)
     echo "$1 Not a valid option"
