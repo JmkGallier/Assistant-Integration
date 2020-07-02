@@ -27,7 +27,7 @@ declare -A SCRIPT_VIRTMIC_OPTIONS=(
   ["play"]=1
 )
 
-declare -A CASE_ARRAY
+
 
 #### USER STATE
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
@@ -42,23 +42,18 @@ GA_CONFIG="${SCRIPT_DIR}/GA_RPi.conf"
 error_incorrectDriver() {
   printf "[ERROR] Incorrect Driver Argument: %s\n" "$SCRIPT_DRIVER_STATE"
   printf "[INFO]Please enter ONE of the following: \n"
-  printf "%s\n" "${!CASE_ARRAY[@]}"
+  printf "%s\n" "${!CHECK_ARRAY[@]}"
   printf "\n[INFO]Exiting nixTools...\n"
   exit 1
 }
 
 #
 check_ScriptDriver() {
-
-  for K in "${!1[@]}"; do
-    CASE_ARRAY[$K]=1
-  done
-
-  if [[ ${CASE_ARRAY[$SCRIPT_DRIVER_STATE]} ]]; then
-    shift
+  local -n CHECK_ARRAY=$1
+  if [[ ${CHECK_ARRAY[$SCRIPT_DRIVER_STATE]} ]]; then
+    return 0
   else
-    printf "%s\n" "${!CASE_ARRAY[@]}"
-    error_incorrectDriver
+    error_incorrectDriver CHECK_ARRAY
   fi
 }
 
@@ -364,7 +359,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}"
+    check_ScriptDriver "${SCRIPT_SETUP_OPTIONS[@]}" && shift
 
     while [ -n "$1" ]; do
       case "$1" in
@@ -385,7 +380,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}"
+    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}" && shift
     ;;
   GA)
     SCRIPT_CURRENT_STATE="$1"
@@ -408,7 +403,7 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
 
-    check_ScriptDriver "${SCRIPT_PROTO_OPTIONS[@]}"
+    check_ScriptDriver "${SCRIPT_VIRTMIC_OPTIONS[@]}" && shift
     ;;
   *)
     echo "$1 Not a valid option"
