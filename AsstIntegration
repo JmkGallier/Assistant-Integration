@@ -1,12 +1,16 @@
 #!/bin/bash
 
+
+# Use of "# shellcheck" is used to suppress IDE warning when shellcheck is installed
+
 ### SCRIPT INTERACTIONS
-# Below are scripts that interact with this script
+# Below are scripts that TRIGGER or ARE triggered by this script
 # velo_detect.py
 # GA_calendar_trigger.sh
 # GoogCal_api.py
 # plantSense_rpi.py
 
+# shellcheck disable=SC2034
 declare -A SCRIPT_SETUP_OPTIONS=(
   ["googlesample"]=1
   ["virtmic"]=1
@@ -14,12 +18,14 @@ declare -A SCRIPT_SETUP_OPTIONS=(
   ["plant"]=1
 )
 
+# shellcheck disable=SC2034
 declare -A SCRIPT_PROTO_OPTIONS=(
   ["calendar"]=1
   ["plant"]=1
   ["doorknob"]=1
 )
 
+# shellcheck disable=SC2034
 declare -A SCRIPT_VIRTMIC_OPTIONS=(
   ["config"]=1
   ["undo"]=1
@@ -27,9 +33,7 @@ declare -A SCRIPT_VIRTMIC_OPTIONS=(
   ["play"]=1
 )
 
-
-
-#### USER STATE
+#### USER STATE (relevant data used for setup and script self-awareness)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 SCRIPT_USER=$(printf '%s\n' "${SUDO_USER:-$USER}")
 SCRIPT_OWNER="$USER"
@@ -38,7 +42,9 @@ USER_IS_ROOT=$([ "$SCRIPT_OWNER" = "root" ] && echo "true" || echo "false")
 SCRIPT_CURRENT_STATE="none"
 GA_CONFIG="${SCRIPT_DIR}/GA_RPi.conf"
 
-#
+#### BEGIN Function Declarations ####
+
+# Reports and exits if driver state is invalid (see arrays named SCRIPT_***_OPTIONS)
 error_incorrectDriver() {
   printf "[ERROR] Incorrect Driver Argument: %s\n" "$SCRIPT_DRIVER_STATE"
   printf "[INFO]Please enter ONE of the following: \n"
@@ -47,7 +53,8 @@ error_incorrectDriver() {
   exit 1
 }
 
-#
+# Reconciles Script driver and Script State
+# See arrays named SCRIPT_***_OPTIONS for controlled vocabulary
 check_ScriptDriver() {
   local -n CHECK_ARRAY=$1
   if [[ ${CHECK_ARRAY[$SCRIPT_DRIVER_STATE]} ]]; then
@@ -57,14 +64,14 @@ check_ScriptDriver() {
   fi
 }
 
-#
+# Reports and exits when Script State is invalid (Search for "Reconcile Script State")
 error_incorrectArg() {
   echo "$1 Not a valid argument for ${SCRIPT_CURRENT_STATE}"
   printf "Exiting Script...\n"
   exit 1
 }
 
-#
+# Data which is sent into .conf file
 config_conf_content() {
   echo "RPI_MODEL='$RPI_MODEL'"
   echo "RPI_PROJECT='$RPI_PROJECT'"
@@ -72,7 +79,7 @@ config_conf_content() {
   echo "SPEAKER_addr='$SPEAKER_addr'"
 }
 
-#
+# User interaction script which saves data to .conf file
 create_config() {
   echo "GA_RPi.conf not found, you will now be asked to make one."
   local RPI_MODEL RPI_PROJECT MIC_addr SPEAKER_addr
@@ -154,16 +161,19 @@ config_Speaker() {
   }" >>"${ALSA_CONFIG}"
 }
 
+# Installation steps to configure the Google Calendar API
 setup_CalendarAPI() {
   pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 }
 
+# Installation steps to configure the Google LiveSpeech Recognition
 setup_SpeechRecog() {
   sudo apt install python3 python3-all-dev python3-pip build-essential swig git libpulse-dev libasound2-dev
   pip3 install pocketsphinx
 }
 
+# Configure Virtual Mic module, Set it as default mic, create a file directory that acts as a microphone
 config_VirtualMic() {
   echo "Configuring VirtualMic..."
   pactl load-module module-pipe-source source_name=virtmic file="${SCRIPT_DIR}"/virtmic format=s16le rate=16000 channels=1
@@ -174,13 +184,13 @@ config_VirtualMic() {
   echo "Done"
 }
 
+# Pipe audio data into VirtualMic file
 play_VirtualMic() {
-  echo "Playing query..."
   cat "${SCRIPT_DIR}"/pressCalendar/static_audio/calendar_query.raw >"${SCRIPT_DIR}"/virtmic
   sleep 2
-  echo "Done"
 }
 
+# Remove Virtual Microphone configuration file and unloads the Virtual Mic as a system device
 undo_VirtualMic() {
   echo "Removing VirtualMic Config..."
   local PULSE_CONFIG="${USER_HOME}/.config/pulse/client.conf"
@@ -189,6 +199,7 @@ undo_VirtualMic() {
   echo "Done"
 }
 
+# Reset Pulseaudio Driver and Undo Virtual Microphone config
 reset_VirtualMic() {
   pulseaudio -k
   undo_VirtualMic
@@ -202,6 +213,7 @@ dev_VirtualMic() {
   undo_VirtualMic
 }
 
+# Install Google Assistant and all required dependencies
 setup_Integration() {
   if [ -n "$CLIENT_SECRET_PATH" ]; then
     [ ! -f "${GA_CONFIG}" ] && create_config
@@ -352,14 +364,20 @@ script_Main_GA() {
 
 #### END Function Declarations
 
-#### Option Input
+#### Option Input ####
+
+# Option Resolver
+# This is where the first option passed (e.g. ./AssistantIntegration 'Setup') is processed
+# Within each option (e.g. Setup) there are Driver states (e.g. Setup googlesample)
+# These are check against arrays for these options (e.g. SCRIPT_SETUP_OPTIONS)
+# There are extra options which may be necessary (e.g. Setup googlesample --client-secrets)
 while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
+  # Reconcile Script State (Setup, Proto, GA, Virtmic)
   case "$1" in
   Setup)
     SCRIPT_CURRENT_STATE="$1"
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
-
     check_ScriptDriver SCRIPT_SETUP_OPTIONS && shift
 
     while [ -n "$1" ]; do
@@ -375,18 +393,19 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
       esac
       shift
     done
+
     ;;
   Proto)
     SCRIPT_CURRENT_STATE="$1"
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
-
     check_ScriptDriver SCRIPT_PROTO_OPTIONS && shift
     ;;
   GA)
     SCRIPT_CURRENT_STATE="$1"
     GA_AUTO_STATE="false"
     shift
+
     while [ -n "${1-}" ]; do
       case "$1" in
       -e)
@@ -398,12 +417,12 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
         ;;
       esac
     done
+
     ;;
   Virtmic)
     SCRIPT_CURRENT_STATE="$1"
     SCRIPT_DRIVER_STATE="${2:-"None"}"
     shift
-
     check_ScriptDriver SCRIPT_VIRTMIC_OPTIONS && shift
     ;;
   *)
@@ -414,6 +433,8 @@ while [ "${SCRIPT_CURRENT_STATE}" == "none" ]; do
   esac
 done
 
+# Script State Resolver
+# This is the Second checkpoint where it decides what it must do next
 script_Main() {
   echo "Script State: ${SCRIPT_CURRENT_STATE}"
   case $SCRIPT_CURRENT_STATE in
